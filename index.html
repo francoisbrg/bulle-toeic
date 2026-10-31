@@ -1,0 +1,1386 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Bulle">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#F2F3F7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0D0F16" media="(prefers-color-scheme: dark)">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html,body{margin:0}</style>
+<title>Bulle TOEIC</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: iOS-style single column, large title, colored deck tiles in a 2-col grid, fixed tab bar. Motif: TOEIC answer-sheet bubbles (A B C D). */
+:root{
+  --bg:#F2F3F7; --card:#FFFFFF; --ink:#151826; --muted:#6B7084; --line:#E3E5EC; --soft:#ECEEF4;
+  --accent:#2B4EF0; --accent-soft:#E4E9FF; --sun:#FFC93C;
+  --good:#1F9D60; --mid:#D98A00; --bad:#E5484D;
+  --l1:#2E9B57; --l2:#2F6AD0; --l3:#C6932A;
+  --shadow:0 1px 2px rgba(20,24,40,.05),0 10px 28px rgba(20,24,40,.07);
+  --tabbg:rgba(255,255,255,.86);
+  --f-display:"Bricolage Grotesque","SF Pro Rounded","Helvetica Neue",Arial,sans-serif;
+  --f-body:"Atkinson Hyperlegible",-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0D0F16; --card:#191C26; --ink:#EEF0F7; --muted:#9097AD; --line:#2A2E3B; --soft:#232736;
+  --accent:#5B78FF; --accent-soft:#1E2747; --sun:#FFD15C;
+  --good:#3CC584; --mid:#F2AE2E; --bad:#FF6B6E; --l1:#4CC27A; --l2:#6C9BF0; --l3:#E2B44E;
+  --shadow:0 1px 0 rgba(255,255,255,.03); --tabbg:rgba(25,28,38,.86); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0D0F16; --card:#191C26; --ink:#EEF0F7; --muted:#9097AD; --line:#2A2E3B; --soft:#232736;
+  --accent:#5B78FF; --accent-soft:#1E2747; --sun:#FFD15C;
+  --good:#3CC584; --mid:#F2AE2E; --bad:#FF6B6E; --l1:#4CC27A; --l2:#6C9BF0; --l3:#E2B44E;
+  --shadow:0 1px 0 rgba(255,255,255,.03); --tabbg:rgba(25,28,38,.86); color-scheme:dark}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{background:var(--bg)}
+body{color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.45;margin:0;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:10px 32px}
+body.has-tabs{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))}
+main{max-width:560px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none;padding:0}
+button:disabled{cursor:default}
+button:focus-visible,select:focus-visible,[tabindex]:focus-visible{outline:3px solid var(--accent);outline-offset:3px;border-radius:12px}
+h1,h2,h3{font-family:var(--f-display);margin:0;text-wrap:balance}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)}
+.ic{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.eyebrow{font-family:var(--f-mono);font-size:.68rem;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+.card-s{background:var(--card);border-radius:22px;box-shadow:var(--shadow)}
+@keyframes rise{from{opacity:.001;transform:translateY(8px)}to{opacity:1;transform:none}}
+.rise>*{animation:rise .35s cubic-bezier(.2,.7,.2,1) both}
+.rise>*:nth-child(2){animation-delay:.04s}.rise>*:nth-child(3){animation-delay:.08s}.rise>*:nth-child(4){animation-delay:.12s}.rise>*:nth-child(5){animation-delay:.16s}
+
+/* header */
+.hdr{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-top:6px}
+.brand{display:flex;align-items:center;gap:12px}
+.brand svg{width:46px;height:46px;border-radius:12px;box-shadow:0 4px 14px rgba(43,78,240,.28)}
+.brand h1{font-size:1.9rem;font-weight:800;letter-spacing:-.03em;line-height:1}
+.brand small{display:block;color:var(--muted);font-size:.82rem;margin-top:3px}
+.streak{display:flex;align-items:center;gap:5px;background:var(--card);box-shadow:var(--shadow);border-radius:999px;padding:7px 12px 7px 9px;font-family:var(--f-mono);font-weight:500}
+.streak .ic{color:#FF7A1A;width:20px;height:20px;fill:#FFB020;stroke:#FF7A1A}
+.streak.off .ic{color:var(--muted);fill:none;stroke:var(--muted)}
+
+/* hero */
+.hero{position:relative;overflow:hidden;border-radius:26px;padding:20px;color:#fff;
+  background:linear-gradient(150deg,#3D63FF 0%,#2440D8 60%,#1C33B8 100%);box-shadow:0 14px 34px rgba(36,64,216,.28)}
+.hero .dots{position:absolute;right:-14px;bottom:62px;display:grid;grid-template-columns:repeat(4,22px);gap:9px;opacity:.13}
+.hero .dots i{width:22px;height:22px;border-radius:50%;border:2.5px solid #fff;display:block}
+.hero .dots i.f{background:var(--sun);border-color:var(--sun);opacity:1}
+.hero-top{display:flex;align-items:center;gap:18px;position:relative}
+.ringwrap{position:relative;flex:none;display:grid;place-items:center}
+.ringwrap .ctr{position:absolute;inset:0;display:grid;place-items:center;text-align:center;line-height:1}
+.ringwrap .ctr b{font-family:var(--f-display);font-size:1.7rem;font-weight:800;display:block}
+.ringwrap .ctr span{font-size:.7rem;opacity:.8}
+.hero h2{font-size:1.35rem;font-weight:800;letter-spacing:-.01em;line-height:1.15}
+.hero p{margin:6px 0 0;opacity:.88;font-size:.92rem}
+.hero .go{margin-top:18px;width:100%;background:#fff;color:#1C33B8;border-radius:16px;padding:15px;font-weight:700;font-size:1.02rem;display:flex;align-items:center;justify-content:center;gap:8px;position:relative;transition:transform .15s}
+.hero .go:active{transform:scale(.98)}
+.hero .go:disabled{opacity:.7}
+.pills{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.pills span{background:rgba(255,255,255,.16);border-radius:999px;padding:4px 10px;font-size:.8rem;font-weight:700}
+
+/* tiles */
+.sec-h{display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding:4px 4px 0}
+.sec-h h2{font-size:1.3rem;font-weight:800;letter-spacing:-.02em}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.tile{position:relative;text-align:left;border-radius:22px;padding:14px;display:flex;flex-direction:column;gap:6px;min-height:168px;overflow:hidden;box-shadow:var(--shadow);
+  background:radial-gradient(130px 110px at 100% 0%,color-mix(in oklab,var(--deck) 26%,transparent),transparent 70%),var(--card);transition:transform .15s}
+.tile:active{transform:scale(.97)}
+.chip{width:46px;height:46px;border-radius:14px;display:grid;place-items:center;background:var(--deck);color:var(--deck-ink,#fff);box-shadow:0 6px 14px color-mix(in oklab,var(--deck) 40%,transparent)}
+.tile .tn{font-family:var(--f-display);font-weight:800;font-size:1.02rem;line-height:1.15;margin-top:6px;letter-spacing:-.01em;min-width:0}
+.tile .tp{font-size:.74rem;color:var(--muted)}
+.tile .foot{margin-top:auto;display:flex;flex-direction:column;gap:5px}
+.pbar{height:6px;border-radius:3px;background:var(--soft);overflow:hidden;display:flex}
+.pbar span{height:100%;display:block}
+.pbar .a{background:var(--deck,var(--accent))}.pbar .r{background:var(--deck,var(--accent));opacity:.3}
+.tile .tc{font-family:var(--f-mono);font-size:.7rem;color:var(--muted)}
+.badge{position:absolute;top:12px;right:12px;background:var(--bad);color:#fff;font-family:var(--f-mono);font-size:.72rem;font-weight:500;min-width:24px;height:24px;border-radius:12px;display:grid;place-items:center;padding:0 7px}
+.wide{display:flex;align-items:center;gap:14px;text-align:left;border-radius:22px;padding:14px;box-shadow:var(--shadow);width:100%;
+  background:radial-gradient(160px 120px at 100% 0%,color-mix(in oklab,var(--deck) 30%,transparent),transparent 70%),var(--card)}
+.wide .mid{flex:1;min-width:0;display:flex;flex-direction:column;gap:5px}
+.wide b{font-family:var(--f-display);font-weight:800;font-size:1.08rem}
+.wide .tp{font-size:.78rem;color:var(--muted)}
+.wide .chev{color:var(--muted)}
+.wide .badge{position:static}
+
+/* deck page */
+.topnav{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.backbtn{display:flex;align-items:center;gap:4px;color:var(--accent);font-weight:700;padding:6px 2px}
+.dhead{border-radius:26px;padding:20px;background:var(--deck);color:var(--deck-ink,#fff);position:relative;overflow:hidden}
+.dhead .wm{position:absolute;right:-20px;top:-22px;width:150px;height:150px;opacity:.16;stroke-width:1.5}
+.dhead h2{font-size:1.7rem;font-weight:800;letter-spacing:-.02em;line-height:1.1;position:relative}
+.dhead .tp{opacity:.85;font-size:.88rem;margin-top:4px;position:relative}
+.dstats{display:flex;gap:22px;margin-top:16px;position:relative}
+.dstats b{font-family:var(--f-display);font-size:1.6rem;font-weight:800;display:block;line-height:1}
+.dstats span{font-size:.76rem;opacity:.85}
+.dbtns{display:grid;grid-template-columns:1.4fr 1fr;gap:10px;margin-top:18px;position:relative}
+.dbtns button{border-radius:14px;padding:13px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:7px}
+.dbtns .p{background:#fff;color:#151826}
+.dbtns .s{background:rgba(255,255,255,.2);color:inherit}
+.wlist{padding:4px 16px}
+.wrow{display:grid;grid-template-columns:10px minmax(0,1fr) auto;gap:4px 12px;align-items:center;padding:12px 0;border-top:1px solid var(--line)}
+.wrow:first-child{border-top:0}
+.wrow .dot{width:10px;height:10px;border-radius:50%;background:var(--soft);border:2px solid var(--line)}
+.wrow .dot.s0{background:var(--bad);border-color:var(--bad)}.wrow .dot.s1{background:var(--mid);border-color:var(--mid)}.wrow .dot.s2{background:var(--good);border-color:var(--good)}
+.wrow b{min-width:0;overflow-wrap:anywhere}
+.wrow small{grid-column:2;color:var(--muted);min-width:0;overflow-wrap:anywhere}
+.lv{display:inline-flex;align-items:center;gap:5px;font-family:var(--f-mono);font-size:.66rem;color:var(--muted);white-space:nowrap}
+.lv i{width:8px;height:8px;border-radius:50%;display:inline-block}
+.lv.l1 i{background:var(--l1)}.lv.l2 i{background:var(--l2)}.lv.l3 i{background:var(--l3)}.lv.l0 i{background:var(--sun)}
+.wrow .lv{grid-row:1/3;grid-column:3}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:.76rem;color:var(--muted);padding:0 4px}
+.legend i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px}
+
+/* study */
+.sbar{display:flex;align-items:center;gap:12px;padding-top:4px}
+.xbtn{width:38px;height:38px;border-radius:50%;background:var(--card);box-shadow:var(--shadow);display:grid;place-items:center;flex:none;color:var(--muted)}
+.prog{flex:1;height:10px;border-radius:5px;background:var(--soft);overflow:hidden}
+.prog span{display:block;height:100%;border-radius:5px;background:var(--accent);transition:width .35s}
+.scount{font-family:var(--f-mono);font-size:.82rem;color:var(--muted)}
+.swiper{position:relative;touch-action:pan-y;transition:transform .3s cubic-bezier(.2,.7,.2,1);user-select:none;-webkit-user-select:none}
+.stamp{position:absolute;top:22px;z-index:3;font-family:var(--f-display);font-weight:800;font-size:1.05rem;letter-spacing:.04em;padding:6px 12px;border-radius:10px;border:3px solid;opacity:0;transition:opacity .12s;pointer-events:none;background:var(--card)}
+.stamp.g{left:20px;color:var(--good);transform:rotate(-12deg)}
+.stamp.b{right:20px;color:var(--bad);transform:rotate(12deg)}
+.swiper[data-hint="good"] .stamp.g,.swiper[data-hint="bad"] .stamp.b{opacity:1}
+.flip{perspective:1600px}
+.card{display:grid;min-height:min(62vh,440px);transition:transform .5s cubic-bezier(.2,.7,.2,1);transform-style:preserve-3d;cursor:pointer;border-radius:28px}
+.card.flipped{transform:rotateY(180deg);cursor:grab}
+.face{grid-area:1/1;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:28px;padding:20px;display:flex;flex-direction:column;gap:10px;position:relative;overflow:hidden}
+.face.front{background:var(--deck);color:var(--deck-ink,#fff);box-shadow:0 18px 40px color-mix(in oklab,var(--deck) 35%,transparent)}
+.face.front .wm{position:absolute;right:-30px;bottom:-30px;width:200px;height:200px;opacity:.14;stroke-width:1.4}
+.face.back{transform:rotateY(180deg);background:var(--card);box-shadow:var(--shadow);border-top:8px solid var(--deck)}
+.fhead{display:flex;justify-content:space-between;align-items:center;gap:10px;position:relative}
+.tag{display:inline-flex;align-items:center;gap:6px;font-size:.74rem;font-weight:700;border-radius:999px;padding:5px 10px;background:rgba(255,255,255,.2)}
+.tag i{width:8px;height:8px;border-radius:50%;background:currentColor;display:inline-block}
+.back .tag{background:var(--soft);color:var(--muted)}
+.fbody{flex:1;display:flex;flex-direction:column;justify-content:center;gap:12px;position:relative;padding:8px 0}
+.fbody .dir{font-family:var(--f-mono);font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;opacity:.75}
+.word{font-family:var(--f-display);font-weight:800;font-size:clamp(2rem,9vw,2.9rem);line-height:1.05;letter-spacing:-.025em;overflow-wrap:anywhere;text-wrap:balance}
+.word.long{font-size:clamp(1.5rem,6.5vw,2rem)}
+.q-small{font-family:var(--f-mono);font-size:.82rem;color:var(--muted)}
+.ex{background:var(--soft);border-radius:14px;padding:12px 14px;font-style:italic;color:var(--ink);font-size:.95rem;position:relative}
+.ex::before{content:"“";position:absolute;left:10px;top:-8px;font-family:var(--f-display);font-size:2rem;color:var(--deck);font-style:normal}
+.ex{padding-left:22px}
+.rule{background:var(--accent-soft);border-radius:14px;padding:12px 14px;font-size:.92rem;display:flex;gap:10px}
+.rule .ic{color:var(--accent);width:20px;height:20px;margin-top:1px}
+.taphint{text-align:center;font-size:.8rem;opacity:.75;position:relative}
+.grades{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.grades button{border-radius:18px;padding:12px 6px 10px;font-weight:700;display:flex;flex-direction:column;align-items:center;gap:3px;transition:transform .12s}
+.grades button:active{transform:scale(.95)}
+.grades small{font-family:var(--f-mono);font-weight:500;font-size:.68rem;opacity:.8}
+.grades .g0{background:color-mix(in oklab,var(--bad) 16%,var(--card));color:var(--bad)}
+.grades .g1{background:color-mix(in oklab,var(--mid) 18%,var(--card));color:var(--mid)}
+.grades .g2{background:color-mix(in oklab,var(--good) 16%,var(--card));color:var(--good)}
+.bigbtn{width:100%;border-radius:18px;padding:16px;font-weight:700;font-size:1.02rem;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;gap:8px;transition:transform .12s}
+.bigbtn:active{transform:scale(.98)}
+.bigbtn.alt{background:var(--card);color:var(--ink);box-shadow:var(--shadow)}
+.swipehint{text-align:center;font-size:.78rem;color:var(--muted)}
+.done{display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center;padding:26px 18px}
+.done h2{font-size:1.6rem;font-weight:800;letter-spacing:-.02em}
+.tally{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;width:100%}
+.tally div{border-radius:16px;padding:10px 4px;background:var(--soft)}
+.tally b{display:block;font-family:var(--f-display);font-size:1.4rem;font-weight:800}
+.tally span{font-size:.74rem;color:var(--muted)}
+.tally .a b{color:var(--bad)}.tally .h b{color:var(--mid)}.tally .g b{color:var(--good)}
+.confetti{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:60}
+
+/* quiz */
+.qhero{border-radius:26px;padding:22px 20px;background:linear-gradient(160deg,#FFD25E,#FFB72B);color:#2A1E00;position:relative;overflow:hidden}
+.qhero h2{font-size:1.5rem;font-weight:800;letter-spacing:-.02em;line-height:1.1;max-width:15ch}
+.qhero p{margin:8px 0 0;font-size:.92rem;max-width:30ch}
+.sheet{position:absolute;right:16px;top:18px;display:flex;flex-direction:column;gap:8px}
+.sheet div{display:flex;gap:6px}
+.sheet i{width:20px;height:20px;border-radius:50%;border:2.5px solid #2A1E00;opacity:.55;display:block}
+.sheet i.f{background:#2A1E00;opacity:.85}
+.dpick{display:flex;flex-wrap:wrap;gap:8px}
+.dpick button{display:inline-flex;align-items:center;gap:7px;border-radius:999px;padding:8px 12px 8px 8px;background:var(--card);box-shadow:var(--shadow);font-size:.86rem;font-weight:700}
+.dpick button i{width:20px;height:20px;border-radius:50%;background:var(--deck);display:block}
+.dpick button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.qcard{border-radius:26px;padding:20px;background:var(--deck);color:var(--deck-ink,#fff);min-height:170px;display:flex;flex-direction:column;gap:10px;position:relative;overflow:hidden}
+.qcard .wm{position:absolute;right:-24px;bottom:-24px;width:140px;height:140px;opacity:.15;stroke-width:1.4}
+.opts{display:flex;flex-direction:column;gap:10px}
+.opt{display:flex;align-items:center;gap:14px;text-align:left;background:var(--card);box-shadow:var(--shadow);border-radius:18px;padding:12px 14px;width:100%;border:2px solid transparent;transition:transform .12s}
+.opt:active{transform:scale(.98)}
+.bub{flex:none;width:34px;height:34px;border-radius:50%;border:2.5px solid var(--muted);display:grid;place-items:center;font-family:var(--f-mono);font-size:.85rem;color:var(--muted)}
+.opt span:last-child{min-width:0;overflow-wrap:anywhere;font-weight:700}
+.opt.right{border-color:var(--good);background:color-mix(in oklab,var(--good) 12%,var(--card))}
+.opt.right .bub{border-color:var(--good);color:var(--good)}
+.opt.right.picked .bub{background:var(--good);color:#fff}
+.opt.wrong{border-color:var(--bad);background:color-mix(in oklab,var(--bad) 12%,var(--card))}
+.opt.wrong .bub{background:var(--bad);border-color:var(--bad);color:#fff}
+.miss{width:100%;text-align:left;padding:4px 16px}
+.miss div{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-top:1px solid var(--line);font-size:.92rem}
+.miss div:first-child{border-top:0}
+.miss b{min-width:0;overflow-wrap:anywhere}.miss span{color:var(--muted);text-align:right;min-width:0}
+.note{padding:14px 16px;color:var(--muted);font-size:.92rem}
+
+/* stats */
+.sum{display:flex;align-items:center;gap:18px;padding:18px}
+.sum h2{font-size:1.25rem;font-weight:800;letter-spacing:-.01em}
+.sgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.stile{padding:14px 16px;display:flex;flex-direction:column;gap:2px}
+.stile .ic{width:22px;height:22px;margin-bottom:6px}
+.stile b{font-family:var(--f-display);font-size:1.7rem;font-weight:800;line-height:1.1}
+.stile span{font-size:.8rem;color:var(--muted)}
+.rings{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;padding:18px 10px;text-align:center}
+.rings .ringwrap .ctr b{font-size:1rem}
+.rings p{margin:6px 0 0;font-size:.78rem;font-weight:700}
+.rings small{display:block;font-family:var(--f-mono);font-size:.62rem;color:var(--muted);font-weight:400}
+.chartbox{padding:16px 16px 12px;display:flex;flex-direction:column;gap:8px}
+.chart{display:flex;align-items:flex-end;gap:5px;height:130px;padding-top:18px}
+.chart div{flex:1;border-radius:6px 6px 3px 3px;background:var(--accent);min-height:3px;position:relative;opacity:.85}
+.chart div.z{background:var(--soft);opacity:1}
+.chart div.t{opacity:1;background:var(--sun)}
+.chart div b{position:absolute;top:-17px;left:50%;transform:translateX(-50%);font-family:var(--f-mono);font-size:.6rem;font-weight:500;color:var(--muted)}
+.chartx{display:flex;gap:5px;font-family:var(--f-mono);font-size:.6rem;color:var(--muted)}
+.chartx span{flex:1;text-align:center}
+.hard{padding:4px 16px}
+.hard div{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 10px;padding:11px 0;border-top:1px solid var(--line)}
+.hard div:first-child{border-top:0}
+.hard b{overflow-wrap:anywhere}.hard small{color:var(--muted);grid-column:1}
+.hard em{font-style:normal;font-family:var(--f-mono);font-size:.72rem;color:var(--bad);background:color-mix(in oklab,var(--bad) 12%,var(--card));border-radius:999px;padding:3px 8px;grid-row:1/3;grid-column:2;align-self:center}
+
+/* settings */
+.group{display:flex;flex-direction:column}
+.grow{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;border-top:1px solid var(--line);flex-wrap:wrap}
+.grow:first-child{border-top:0}
+.grow .gl{display:flex;align-items:center;gap:12px;font-weight:700;min-width:0}
+.gi{width:32px;height:32px;border-radius:9px;display:grid;place-items:center;color:#fff;flex:none}
+.gi .ic{width:19px;height:19px}
+.seg{display:inline-flex;background:var(--soft);border-radius:11px;padding:3px;gap:2px}
+.seg button{border-radius:9px;padding:6px 11px;font-size:.85rem;font-weight:700;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--card);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.lvchips{display:flex;gap:8px;flex-wrap:wrap;padding:0 16px 14px}
+.lvc{display:inline-flex;align-items:center;gap:8px;border-radius:14px;padding:8px 12px 8px 9px;background:var(--soft);font-weight:700;font-size:.86rem;color:var(--muted)}
+.lvc i{width:18px;height:18px;border-radius:50%;border:2.5px solid var(--lc);display:grid;place-items:center}
+.lvc[aria-pressed="true"]{color:var(--ink);background:color-mix(in oklab,var(--lc) 14%,var(--card))}
+.lvc[aria-pressed="true"] i{background:var(--lc)}
+.lvc small{font-family:var(--f-mono);font-weight:500;font-size:.68rem;color:var(--muted)}
+.txt{padding:0 16px 14px;color:var(--muted);font-size:.88rem;margin:0}
+.steps{margin:0;padding:0 16px 16px 36px;color:var(--muted);font-size:.9rem;display:flex;flex-direction:column;gap:4px}
+.linkbtn{color:var(--accent);font-weight:700;padding:4px 0}
+.dangerbtn{color:var(--bad);font-weight:700}
+.foot-note{text-align:center;font-size:.76rem;color:var(--muted);padding:6px}
+
+/* tab bar */
+.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:40;background:var(--tabbg);-webkit-backdrop-filter:saturate(1.6) blur(18px);backdrop-filter:saturate(1.6) blur(18px);border-top:1px solid var(--line);
+  padding:7px max(16px,env(safe-area-inset-left,0px)) calc(7px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-right,0px))}
+.tabbar nav{max-width:560px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr)}
+.tabbar button{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:.68rem;font-weight:700;color:var(--muted);padding:4px 0}
+.tabbar button[aria-current="page"]{color:var(--accent)}
+.tabbar .ic{width:25px;height:25px}
+
+@media (max-width:370px){.grid{gap:10px}.tile{padding:12px}.rings{grid-template-columns:repeat(2,1fr)}}
+@media (prefers-reduced-motion:reduce){.card,.swiper,.prog span{transition:none}.rise>*{animation:none}}
+</style>
+</head>
+<body>
+
+
+<main id="main"></main>
+<div class="tabbar" id="tabbar">
+  <nav>
+    <button id="t-home" data-tab="home"><svg class="ic" viewBox="0 0 24 24"><rect x="7" y="3" width="13" height="16" rx="2.5"/><path d="M4 7v11a3 3 0 0 0 3 3h9"/></svg>Réviser</button>
+    <button id="t-quiz" data-tab="quiz"><svg class="ic" viewBox="0 0 24 24"><circle cx="7" cy="7" r="3"/><circle cx="17" cy="7" r="3" fill="currentColor"/><circle cx="7" cy="17" r="3"/><circle cx="17" cy="17" r="3"/></svg>Quiz</button>
+    <button id="t-stats" data-tab="stats"><svg class="ic" viewBox="0 0 24 24"><path d="M5 20v-7M12 20V5M19 20v-10"/></svg>Progrès</button>
+    <button id="t-settings" data-tab="settings"><svg class="ic" viewBox="0 0 24 24"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2.2"/><circle cx="9" cy="17" r="2.2"/></svg>Réglages</button>
+  </nav>
+</div>
+
+<script>
+const DECKS = [
+{k:'office', n:'Bureau & réunions', p:'Parts 3 · 4 · 7', w:`
+agenda|ordre du jour|1|Let's move on to the next item on the agenda.
+deadline|date limite|1|The deadline for the report is Friday.
+colleague|collègue|1|I'll ask a colleague to cover my shift.
+supervisor|responsable, superviseur|1|Please give the form to your supervisor.
+department|service (dans une entreprise)|1|She works in the accounting department.
+schedule|planning, emploi du temps|1|The schedule has changed again.
+to schedule|programmer, planifier|1|The call is scheduled for 3 p.m.
+conference room|salle de réunion|1|The client is waiting in the conference room.
+stationery|fournitures de bureau|1|We need to order more stationery.
+filing cabinet|classeur (meuble)|1|The contracts are in the filing cabinet.
+photocopier|photocopieuse|1|The photocopier on the second floor is jammed.
+out of order|en panne|1|The coffee machine is out of order.
+to forward|transférer (un mail)|1|I'll forward you the email right away.
+attachment|pièce jointe|1|Please see the attachment for details.
+draft|brouillon, ébauche|1|Here is the first draft of the proposal.
+to be in charge of|être responsable de|1|Who is in charge of the new project?
+reception desk|accueil|1|Visitors must sign in at the reception desk.
+to reschedule|reprogrammer|2|Can we reschedule the meeting to Monday?
+to chair (a meeting)|présider (une réunion)|2|The CEO will chair the meeting.
+to brief|informer, mettre au courant|2|I'll brief the team on the changes.
+handout|document distribué|2|Please read the handout before the session.
+to circulate|faire circuler, diffuser|2|The draft was circulated to all managers.
+attendee|participant|2|Attendees must register online.
+to delegate|déléguer|2|A good manager knows how to delegate.
+to run late|avoir du retard (sur l'horaire)|2|The meeting is running late.
+correspondence|courrier, correspondance|2|All correspondence should go through Ms. Lee.
+extension|poste (téléphonique)|2|You can reach me at extension 214.
+to be on leave|être en congé|2|Mr. Park is on leave this week.
+to proofread|relire pour corriger|2|Could you proofread my report?
+to adjourn|lever la séance|3|The meeting was adjourned at noon.
+to convene|réunir, se réunir|3|The board will convene next Tuesday.
+a heads-up|une info à l'avance|3|Thanks for the heads-up about the audit.
+to touch base|faire un point rapide|3|Let's touch base after lunch.
+to streamline|simplifier, rationaliser|3|We streamlined the approval process.
+`},
+{k:'hr', n:'Ressources humaines', p:'Parts 3 · 7', w:`
+applicant|candidat|1|We received fifty applicants for the job.
+to apply for|postuler à|1|She applied for the marketing position.
+résumé|CV|1|Please attach your résumé.
+cover letter|lettre de motivation|1|A cover letter is not required.
+job opening|poste à pourvoir|1|There is a job opening in sales.
+to hire|embaucher|1|We plan to hire three engineers.
+interview|entretien|1|Her interview is on Thursday.
+wage|salaire (horaire)|1|The minimum wage rose this year.
+staff|personnel|1|All staff must attend the training.
+benefits|avantages sociaux|1|The job offers good benefits.
+to be promoted|être promu|1|He was promoted to team leader.
+to retire|prendre sa retraite|1|She will retire next spring.
+to fire|renvoyer|1|He was fired for being late.
+bonus|prime|1|Employees receive a year-end bonus.
+raise|augmentation (de salaire)|1|She asked for a raise.
+overtime|heures supplémentaires|1|We worked overtime to finish the order.
+shift|poste, équipe (horaire)|1|The night shift starts at 10 p.m.
+part-time|à temps partiel|1|He works part-time on weekends.
+internship|stage|1|She did an internship at a bank.
+qualifications|qualifications, diplômes|1|Please list your qualifications.
+probation period|période d'essai|2|The probation period lasts three months.
+to resign|démissionner|2|He resigned last month.
+resignation|démission|2|She handed in her resignation.
+to lay off|licencier (économique)|2|The factory laid off 200 workers.
+workforce|main-d'œuvre, effectifs|2|Half of the workforce works remotely.
+performance review|entretien d'évaluation|2|Your performance review is next week.
+appraisal|évaluation|2|Annual appraisals take place in June.
+incentive|mesure incitative, prime|2|Sales staff get incentives for new clients.
+trainee|stagiaire, apprenti|2|The trainees will shadow senior staff.
+headhunter|chasseur de têtes|2|A headhunter contacted him last week.
+eligible|admissible, qui a droit|2|Staff are eligible for the plan after a year.
+job description|fiche de poste|2|The job description lists the main tasks.
+reference|recommandation|2|Please provide two references.
+to take on|embaucher, prendre en charge|2|The firm is taking on new staff.
+to onboard|intégrer (un nouvel employé)|3|New hires are onboarded in two days.
+staff turnover|rotation du personnel|3|Staff turnover is high in retail.
+seniority|ancienneté|3|Promotions are based on seniority.
+severance pay|indemnités de licenciement|3|Laid-off workers received severance pay.
+to step down|quitter ses fonctions|3|The CEO will step down in May.
+`},
+{k:'finance', n:'Finance & comptabilité', p:'Parts 5 · 7', w:`
+profit|bénéfice|1|Profits rose by 10% this year.
+loss|perte|1|The company reported a loss.
+expense|dépense|1|Keep track of your expenses.
+receipt|reçu, ticket de caisse|1|Keep your receipt for refunds.
+bill|facture|1|The electricity bill is due tomorrow.
+accountant|comptable|1|Our accountant checks the books.
+accounting|comptabilité|1|She studied accounting at university.
+loan|prêt|1|The bank approved the loan.
+interest rate|taux d'intérêt|1|Interest rates are low right now.
+deposit|acompte, dépôt|1|A 10% deposit is required.
+to withdraw|retirer (de l'argent)|1|He withdrew cash from the ATM.
+quarter|trimestre|1|Sales rose in the third quarter.
+revenue|chiffre d'affaires, recettes|2|Revenue grew by 8% last year.
+expenditure|dépenses|2|Public expenditure was cut.
+to reimburse|rembourser (des frais)|2|Travel costs will be reimbursed.
+expense report|note de frais|2|Submit your expense report by Friday.
+audit|audit, vérification des comptes|2|The audit starts next week.
+auditor|auditeur, commissaire aux comptes|2|The auditors found no errors.
+balance sheet|bilan|2|Assets are listed on the balance sheet.
+cash flow|trésorerie|2|Cash flow is our main concern.
+asset|actif, atout|2|Her experience is a real asset.
+dividend|dividende|2|Shareholders will receive a dividend.
+mortgage|prêt immobilier|2|They took out a mortgage to buy the house.
+fiscal year|exercice comptable|2|The fiscal year ends in March.
+forecast|prévision|2|The sales forecast looks positive.
+merger|fusion|2|The merger was announced on Monday.
+acquisition|rachat, acquisition|2|The acquisition cost $2 million.
+tax return|déclaration d'impôts|2|File your tax return before May.
+earnings|bénéfices, résultats|2|Quarterly earnings beat expectations.
+income statement|compte de résultat|3|The income statement shows a net profit.
+liability|passif, dette, responsabilité|3|The company has few liabilities.
+stake|participation (au capital)|3|They hold a 20% stake in the firm.
+to break even|atteindre le seuil de rentabilité|3|We expect to break even next year.
+bankruptcy|faillite|3|The retailer filed for bankruptcy.
+to allocate|allouer, affecter|3|Funds were allocated to research.
+shortfall|déficit, manque|3|There is a shortfall of $2 million.
+lucrative|lucratif|3|It is a lucrative market.
+to fluctuate|fluctuer|3|Prices fluctuate with demand.
+`},
+{k:'purchasing', n:'Achats & commandes', p:'Parts 6 · 7', w:`
+supplier|fournisseur|1|We changed suppliers last year.
+to place an order|passer une commande|1|I'd like to place an order for 50 chairs.
+purchase|achat|1|Thank you for your purchase.
+estimate|devis, estimation|1|The builder gave us an estimate.
+discount|remise, réduction|1|Members get a 10% discount.
+refund|remboursement|1|You can ask for a full refund.
+in stock|en stock|1|The blue model is in stock.
+out of stock|en rupture de stock|1|That size is out of stock.
+to ship|expédier|1|We ship orders within 48 hours.
+shipping|livraison, expédition|1|Shipping is free over $50.
+delivery|livraison|1|Delivery takes three days.
+tracking number|numéro de suivi|1|Use the tracking number to follow your parcel.
+damaged|endommagé|1|The box arrived damaged.
+customer service|service client|1|Please contact customer service.
+coupon|bon de réduction|1|This coupon expires on Sunday.
+vendor|vendeur, fournisseur|2|We work with local vendors.
+purchasing department|service des achats|2|Send the request to the purchasing department.
+quotation|devis|2|We received three quotations.
+in bulk|en grande quantité|2|Buying in bulk lowers the price.
+wholesale|vente en gros|2|They sell wholesale to shops.
+retail|vente au détail|2|The retail price is $40.
+defective|défectueux|2|We'll replace the defective unit.
+cancellation|annulation|2|Cancellations must be made 24 hours ahead.
+to negotiate|négocier|2|We negotiated a better price.
+terms and conditions|conditions générales|2|Please read the terms and conditions.
+to renew|renouveler|2|The contract is renewed every year.
+expiration date|date d'expiration|2|Check the expiration date.
+voucher|bon, coupon|2|You'll get a gift voucher.
+on backorder|en réapprovisionnement|3|The item is on backorder until May.
+specifications|caractéristiques techniques|3|The specifications are in the manual.
+procurement|approvisionnement|3|She manages procurement for the group.
+payment terms|conditions de paiement|3|Payment terms are 30 days.
+upfront|d'avance|3|You must pay half upfront.
+consignment|lot, envoi|3|The first consignment arrived today.
+`},
+{k:'sales', n:'Ventes & marketing', p:'Parts 4 · 7', w:`
+advertisement|publicité, annonce|1|I saw your advertisement online.
+launch|lancement|1|The product launch is in June.
+competitor|concurrent|1|Our main competitor cut its prices.
+survey|enquête, sondage|1|Please fill out our short survey.
+feedback|retour, avis|1|Thanks for your feedback.
+brand|marque|1|It's a well-known brand.
+sample|échantillon|1|Free samples are available.
+free of charge|gratuit|1|Delivery is free of charge.
+demand|demande|1|Demand is rising fast.
+consumer|consommateur|1|Consumers prefer online shopping.
+to promote|promouvoir|1|They promoted the new range on TV.
+advertising campaign|campagne publicitaire|2|The campaign starts next month.
+target market|marché cible|2|Our target market is young adults.
+market share|part de marché|2|We gained market share this year.
+competitive|compétitif, concurrentiel|2|We offer competitive prices.
+sales representative|commercial(e)|2|A sales representative will call you.
+sales figures|chiffres des ventes|2|Sales figures are up 5%.
+promotional|promotionnel|2|Promotional prices end today.
+customer loyalty|fidélité des clients|2|The card rewards customer loyalty.
+to boost|stimuler|2|The campaign boosted sales.
+trade show|salon professionnel|2|We'll exhibit at the trade show.
+booth|stand|2|Visit our booth in Hall B.
+prospective customer|client potentiel|2|We met many prospective customers.
+retailer|détaillant|2|The product is sold by major retailers.
+merchandise|marchandises|2|The merchandise is on display.
+press release|communiqué de presse|2|A press release was issued today.
+word of mouth|bouche-à-oreille|2|The café grew through word of mouth.
+to exceed expectations|dépasser les attentes|2|The results exceeded expectations.
+endorsement|soutien, recommandation|3|The brand signed an endorsement deal.
+lead|piste, contact prospect|3|The fair generated many leads.
+to outsell|se vendre mieux que|3|The new model outsold the old one.
+to slash prices|baisser fortement les prix|3|Stores slashed prices after Christmas.
+stiff competition|concurrence acharnée|3|We face stiff competition abroad.
+`},
+{k:'travel', n:'Voyages & transports', p:'Parts 2 · 3 · 4', w:`
+boarding pass|carte d'embarquement|1|Please show your boarding pass.
+to board|embarquer|1|Passengers may now board.
+departure|départ|1|The departure time has changed.
+delayed|retardé|1|Our flight is delayed by an hour.
+round-trip|aller-retour|1|A round-trip ticket is cheaper.
+one-way|aller simple|1|I need a one-way ticket to Boston.
+fare|tarif (transport)|1|Bus fares went up.
+luggage|bagages|1|Don't leave your luggage unattended.
+customs|douane|1|We went through customs quickly.
+window seat|place côté hublot|1|I'd like a window seat.
+to check in|s'enregistrer|1|Check in two hours before your flight.
+to book|réserver|1|I booked a room for two nights.
+traffic jam|embouteillage|1|We were stuck in a traffic jam.
+to pick up|aller chercher (qqn)|1|I'll pick you up at the airport.
+platform|quai (gare)|1|The train leaves from platform 4.
+timetable|horaires|1|Check the bus timetable.
+on time|à l'heure|1|The train arrived on time.
+car rental|location de voiture|1|The car rental desk is on the left.
+itinerary|programme de voyage|2|I've emailed you the itinerary.
+layover|escale|2|We have a three-hour layover in Dubai.
+connecting flight|correspondance|2|I missed my connecting flight.
+carry-on|bagage cabine|2|Only one carry-on is allowed.
+baggage claim|retrait des bagages|2|Meet me at baggage claim.
+aisle seat|place côté couloir|2|An aisle seat, please.
+fully booked|complet|2|The hotel is fully booked.
+commute|trajet domicile-travail|2|My commute takes forty minutes.
+detour|déviation|2|Take the detour on Main Street.
+shuttle|navette|2|A free shuttle runs to the hotel.
+jet lag|décalage horaire|2|I'm still suffering from jet lag.
+commuter|personne qui fait la navette|3|Commuters were stuck for hours.
+toll|péage|3|There's a toll on the bridge.
+per diem|indemnité journalière|3|Staff get a per diem for meals.
+to be stranded|être bloqué|3|Hundreds of travelers were stranded.
+`},
+{k:'hotel', n:'Hôtel & restauration', p:'Parts 2 · 3', w:`
+to check out|libérer la chambre|1|Guests must check out by 11 a.m.
+front desk|réception|1|Leave your key at the front desk.
+appetizer|entrée|1|We shared two appetizers.
+main course|plat principal|1|For the main course I'll have fish.
+tip|pourboire|1|Service is included, no tip needed.
+check|addition (au restaurant)|1|Could we have the check, please?
+room service|service en chambre|1|Room service is open until midnight.
+wake-up call|appel de réveil|1|I'd like a wake-up call at six.
+guest|client (hôtel), invité|1|All guests get free Wi-Fi.
+takeout|à emporter|1|Let's order takeout tonight.
+vacancy|chambre disponible|2|Sorry, no vacancies tonight.
+complimentary|offert, gratuit|2|Breakfast is complimentary.
+housekeeping|service de ménage|2|Housekeeping will clean your room.
+caterer|traiteur|2|The caterer arrives at five.
+catering|service traiteur|2|Who's handling the catering?
+beverage|boisson|2|Beverages are not included.
+dietary restrictions|restrictions alimentaires|2|Tell us about any dietary restrictions.
+venue|lieu (d'un événement)|2|The venue holds 500 people.
+accommodation|hébergement|2|Accommodation is provided.
+cuisine|cuisine (style culinaire)|2|The restaurant serves Thai cuisine.
+seating|places assises|2|Seating is limited.
+spacious|spacieux|2|The rooms are bright and spacious.
+amenities|équipements, services|3|Amenities include a pool and a gym.
+to cater to|répondre aux besoins de|3|The hotel caters to business travelers.
+to accommodate|accueillir, loger|3|The hall can accommodate 300 guests.
+occupancy rate|taux d'occupation|3|The occupancy rate reached 90%.
+patron|client (habitué)|3|The café is popular with local patrons.
+`},
+{k:'property', n:'Locaux & immobilier', p:'Parts 3 · 7', w:`
+branch|succursale, agence|1|The bank opened a new branch.
+rent|loyer|1|The rent is due on the first.
+to rent|louer|1|We rent a small office downtown.
+property|bien, propriété|1|The property is for sale.
+maintenance|entretien|1|Call maintenance about the leak.
+under construction|en construction|1|The new wing is under construction.
+plumber|plombier|1|The plumber fixed the sink.
+storage room|réserve|1|Put the boxes in the storage room.
+parking lot|parking|1|The parking lot is full.
+elevator|ascenseur|1|The elevator is out of service.
+premises|locaux|2|Smoking is not allowed on the premises.
+facility|installation, site|2|The new facility opens in May.
+headquarters|siège social|2|Our headquarters are in Paris.
+lease|bail|2|We signed a five-year lease.
+landlord|propriétaire (bailleur)|2|The landlord raised the rent.
+tenant|locataire|2|Tenants must give one month's notice.
+real estate|immobilier|2|She works in real estate.
+utilities|charges (eau, gaz, électricité)|2|Utilities are included in the rent.
+to renovate|rénover|2|The lobby is being renovated.
+contractor|entrepreneur, prestataire|2|We hired a contractor for the roof.
+janitor|agent d'entretien|2|The janitor locks the building at night.
+to relocate|déménager, délocaliser|2|The office will relocate to Lyon.
+floor plan|plan d'étage|2|Here is the floor plan of the new office.
+blueprint|plan d'architecte|3|The architect showed us the blueprints.
+to vacate|libérer (des locaux)|3|Tenants must vacate by June 30.
+zoning|zonage|3|Zoning laws limit building height.
+square footage|surface|3|What's the square footage of the store?
+adjacent to|attenant à|3|The parking is adjacent to the hotel.
+`},
+{k:'photo', n:'Décrire une photo', p:'Part 1', w:`
+ladder|échelle|1|A man is climbing a ladder.
+shelf|étagère|1|Books are arranged on a shelf.
+to point at|montrer du doigt|1|She's pointing at a map.
+to examine|examiner|1|He's examining a document.
+to water plants|arroser les plantes|1|A woman is watering some plants.
+to hang|être suspendu, accrocher|1|Pictures are hanging on the wall.
+cart|chariot|1|A cart is loaded with boxes.
+to lean against|être appuyé contre|2|A bicycle is leaning against a fence.
+to stack|empiler|2|Chairs have been stacked in a corner.
+to unload|décharger|2|Workers are unloading a truck.
+wheelbarrow|brouette|2|A wheelbarrow is full of soil.
+to sweep|balayer|2|A man is sweeping the floor.
+lawn|pelouse|2|The lawn has just been cut.
+pedestrian|piéton|2|Pedestrians are crossing the street.
+crosswalk|passage piéton|2|People are waiting at a crosswalk.
+to be lined up|être alignés|2|Cars are lined up at the gate.
+to face each other|être face à face|2|Two people are facing each other.
+to hand|tendre, donner|2|She's handing him a folder.
+to reach for|tendre la main vers|2|He's reaching for a cup.
+to fold|plier|2|A woman is folding towels.
+crate|caisse|2|Crates are piled on the dock.
+dock|quai (port)|2|Boats are tied up at the dock.
+to browse|regarder (en magasin)|2|Customers are browsing in a bookstore.
+to stroll|se promener|2|A couple is strolling along the beach.
+podium|pupitre|2|A speaker is standing at a podium.
+to mow|tondre|3|A man is mowing the lawn.
+to mop|passer la serpillière|3|The floor is being mopped.
+curb|bord du trottoir|3|A car is parked by the curb.
+awning|auvent, store|3|An awning shades the café tables.
+scaffolding|échafaudage|3|Scaffolding covers the building.
+to be docked|être à quai|3|A ship is docked in the harbor.
+to address an audience|s'adresser à un public|3|A woman is addressing an audience.
+`},
+{k:'production', n:'Production & logistique', p:'Parts 3 · 7', w:`
+warehouse|entrepôt|1|The goods are stored in a warehouse.
+equipment|équipement, matériel|1|Safety equipment is provided.
+inventory|stocks, inventaire|2|We check our inventory every month.
+assembly line|chaîne de montage|2|He works on the assembly line.
+to manufacture|fabriquer|2|The plant manufactures car parts.
+manufacturer|fabricant|2|Contact the manufacturer for repairs.
+plant|usine|2|The plant employs 800 people.
+output|production|2|Output rose by 12%.
+quality control|contrôle qualité|2|Every batch goes through quality control.
+efficiency|efficacité, rendement|2|The new machines improved efficiency.
+raw materials|matières premières|2|The cost of raw materials went up.
+supply chain|chaîne d'approvisionnement|2|The supply chain was disrupted.
+cargo|cargaison|2|The cargo was unloaded at dawn.
+to assemble|assembler|2|The desks are easy to assemble.
+machinery|machines|2|The machinery needs regular checks.
+safety regulations|règles de sécurité|2|Follow the safety regulations.
+protective gear|équipement de protection|2|Wear protective gear at all times.
+capacity|capacité|2|The factory is running at full capacity.
+logistics|logistique|2|She manages logistics for Europe.
+shortage|pénurie|2|There's a shortage of chips.
+batch|lot|2|This batch will ship tomorrow.
+freight|fret|3|The freight costs doubled.
+forklift|chariot élévateur|3|Only trained staff may drive the forklift.
+to comply with|se conformer à|3|All sites must comply with the rules.
+compliance|conformité|3|The audit checks compliance.
+bottleneck|goulot d'étranglement|3|Packaging is the main bottleneck.
+to outsource|externaliser, sous-traiter|3|We outsource our IT support.
+lead time|délai de livraison|3|Lead time is six weeks.
+surplus|excédent|3|We sold the surplus at a discount.
+to dispatch|expédier|3|Orders are dispatched within a day.
+recall|rappel (de produits)|3|The company issued a product recall.
+durable|solide, résistant|3|The bags are made of durable fabric.
+`},
+{k:'tech', n:'Technologie & informatique', p:'Parts 3 · 6', w:`
+software|logiciel|1|Install the latest version of the software.
+to download|télécharger|1|You can download the file here.
+update|mise à jour|1|The update takes ten minutes.
+password|mot de passe|1|Change your password every three months.
+to log in|se connecter|1|Log in with your staff ID.
+username|identifiant|1|Enter your username.
+network|réseau|1|The network is down.
+data|données|1|The data is saved on the server.
+technical support|assistance technique|1|Call technical support for help.
+device|appareil|1|Turn off all devices.
+to plug in|brancher|1|Plug in the charger.
+IT department|service informatique|1|Ask the IT department for a new laptop.
+hardware|matériel informatique|2|We need new hardware.
+to upgrade|mettre à niveau|2|We upgraded the system last week.
+to back up|sauvegarder|2|Back up your files every day.
+backup|sauvegarde|2|Do we have a backup?
+database|base de données|2|Client details are in the database.
+to crash|planter|2|My computer crashed again.
+user-friendly|facile à utiliser|2|The app is very user-friendly.
+spreadsheet|tableur|2|I put the figures in a spreadsheet.
+to automate|automatiser|2|We automated the invoicing.
+feature|fonctionnalité|2|The new feature saves time.
+to shut down|éteindre|2|Shut down your computer before leaving.
+to troubleshoot|diagnostiquer, dépanner|3|IT is troubleshooting the problem.
+malfunction|dysfonctionnement|3|A malfunction stopped production.
+outlet|prise électrique, point de vente|3|There's an outlet under the desk.
+bandwidth|bande passante|3|Video calls use a lot of bandwidth.
+to encrypt|chiffrer|3|All emails are encrypted.
+data breach|fuite de données|3|The data breach affected 10,000 users.
+cutting-edge|de pointe|3|They use cutting-edge technology.
+state-of-the-art|ultramoderne|3|The lab has state-of-the-art equipment.
+glitch|petit bug|3|A glitch delayed the launch.
+`},
+{k:'health', n:'Santé & assurances', p:'Parts 2 · 4', w:`
+appointment|rendez-vous|1|I have a dentist appointment at four.
+to make an appointment|prendre rendez-vous|1|I'd like to make an appointment.
+pharmacist|pharmacien|1|Ask the pharmacist for advice.
+sore throat|mal de gorge|1|I have a sore throat.
+clinic|clinique, cabinet médical|1|The clinic opens at eight.
+insurance|assurance|1|Does your insurance cover this?
+waiting room|salle d'attente|1|Please take a seat in the waiting room.
+fitness|forme physique|1|The gym has fitness classes.
+prescription|ordonnance|2|You need a prescription for this.
+sick leave|arrêt maladie|2|She's on sick leave this week.
+checkup|bilan de santé|2|I go for a checkup every year.
+to recover|se rétablir|2|He recovered quickly.
+injury|blessure|2|The injury kept him off work.
+insurance policy|contrat d'assurance|2|Read your insurance policy carefully.
+coverage|couverture (assurance)|2|The plan offers full coverage.
+physician|médecin|2|Consult your physician first.
+side effects|effets secondaires|2|There are few side effects.
+wellness program|programme bien-être|2|Join our wellness program.
+to cover (costs)|prendre en charge|2|The company covers medical costs.
+emergency room|urgences|2|He was taken to the emergency room.
+premium|prime (d'assurance)|3|Premiums will rise next year.
+claim|demande d'indemnisation|3|File your claim within 30 days.
+deductible|franchise|3|The deductible is $500.
+policyholder|assuré|3|Policyholders will be notified by mail.
+dosage|posologie|3|Do not exceed the recommended dosage.
+to fill a prescription|faire préparer une ordonnance|3|The pharmacy filled my prescription.
+`},
+{k:'phrasal', n:'Verbes à particule', p:'Parts 2 · 5', w:`
+to set up|mettre en place, installer|1|We set up a new office in Lyon.
+to fill out|remplir (un formulaire)|1|Please fill out this form.
+to hand in|remettre, rendre|1|Hand in your report by Friday.
+to deal with|gérer, traiter|1|She deals with customer complaints.
+to look forward to|avoir hâte de (+ -ing)|1|I look forward to meeting you.
+to sign up for|s'inscrire à|1|Sign up for the newsletter.
+to drop off|déposer|1|I'll drop off the documents tomorrow.
+to hold on|patienter (au téléphone)|1|Hold on, I'll transfer you.
+to get back to|recontacter|1|I'll get back to you this afternoon.
+to call off|annuler|2|The event was called off.
+to put off|repousser|2|They put off the decision.
+to carry out|effectuer, mener|2|We carried out a survey.
+to look into|examiner, étudier|2|We're looking into the problem.
+to turn down|refuser|2|She turned down the offer.
+to take over|reprendre (la direction)|2|He'll take over the project.
+to figure out|comprendre, trouver|2|I can't figure out the new system.
+to come up with|trouver (une idée)|2|She came up with a great idea.
+to catch up on|rattraper|2|I need to catch up on my emails.
+to fall behind|prendre du retard|2|We fell behind schedule.
+to bring up|aborder (un sujet)|2|He brought up the budget.
+to point out|faire remarquer|2|She pointed out an error.
+to go over|passer en revue|2|Let's go over the figures.
+to set aside|mettre de côté|2|Set aside some time for training.
+to sort out|régler|2|We sorted out the problem.
+to stand out|se démarquer|2|Her résumé stood out.
+to cut back on|réduire|2|We're cutting back on travel.
+to back out|se désister|3|The investor backed out at the last minute.
+to phase out|supprimer progressivement|3|Paper tickets will be phased out.
+to iron out|régler (des détails)|3|We need to iron out a few issues.
+to draw up|rédiger (un contrat)|3|The lawyer drew up the contract.
+to wind down|ralentir progressivement|3|The project is winding down.
+to fill in for|remplacer (qqn)|3|Can you fill in for me tomorrow?
+to turn up|se présenter, arriver|3|Only ten people turned up.
+to opt out|choisir de ne pas participer|3|You can opt out of emails.
+to account for|représenter (une part)|3|Exports account for 40% of sales.
+`},
+{k:'linkers', n:'Mots de liaison', p:'Parts 5 · 6', w:`
+however|cependant|1|Sales rose. However, profits fell.
+therefore|par conséquent|1|It rained. Therefore, the event moved indoors.
+although|bien que (+ sujet + verbe)|1|Although it was late, she kept working.
+despite|malgré (+ nom)|1|Despite the rain, the event went ahead.
+unless|à moins que|1|We'll start at nine unless you object.
+in order to|afin de|1|We called in order to confirm.
+due to|en raison de|1|The flight was cancelled due to fog.
+as a result|en conséquence|1|As a result, prices went up.
+in addition to|en plus de|1|In addition to salary, you get a car.
+instead of|au lieu de|1|Let's meet Tuesday instead of Monday.
+even though|même si|1|Even though he was ill, he came.
+in spite of|malgré (+ nom)|2|In spite of the delay, we finished.
+whereas|alors que (contraste)|2|He likes tea, whereas she prefers coffee.
+moreover|de plus|2|The plan is cheap. Moreover, it's fast.
+furthermore|en outre|2|Furthermore, the office is close to the station.
+nevertheless|néanmoins|2|It was risky. Nevertheless, we agreed.
+provided that|à condition que|2|You can go, provided that you finish first.
+as long as|tant que|2|It's fine as long as you call.
+so that|pour que|2|Speak slowly so that everyone understands.
+consequently|par conséquent|2|Consequently, the launch was delayed.
+otherwise|sinon|2|Book now, otherwise it'll be full.
+meanwhile|pendant ce temps|2|Meanwhile, sales kept growing.
+whether|si (choix entre deux)|2|I'm not sure whether he'll come.
+prior to|avant|2|Please arrive prior to 9 a.m.
+throughout|tout au long de|2|Prices rose throughout the year.
+in contrast|en revanche|2|In contrast, exports fell.
+owing to|en raison de|3|Owing to high demand, delivery is slow.
+regardless of|indépendamment de|3|Everyone pays the same, regardless of age.
+notwithstanding|nonobstant, malgré|3|Notwithstanding the risks, they invested.
+thereby|ce qui permet de, ainsi|3|We cut costs, thereby raising profits.
+hence|d'où, donc|3|The road is closed, hence the delay.
+upon|dès (la réception de)|3|Upon arrival, please sign in.
+whereby|par lequel|3|A system whereby staff can work from home.
+as of|à compter de|3|As of May 1, the office will close at six.
+in the event of|en cas de|3|In the event of fire, use the stairs.
+accordingly|en conséquence|3|Prices rose and we adjusted accordingly.
+likewise|de même|3|Likewise, the Paris branch grew.
+`},
+{k:'falsefriends', n:'Faux amis', p:'Parts 5 · 7', w:`
+actually|en fait (pas actuellement)|1|Actually, I've never been there.
+currently|actuellement|1|He is currently in a meeting.
+eventually|finalement (pas éventuellement)|1|We eventually found a solution.
+library|bibliothèque (pas librairie)|1|You can borrow it from the library.
+bookstore|librairie|1|The bookstore is next to the bank.
+to complete|terminer|1|Complete the form and sign it.
+luck|chance|1|Good luck with your interview.
+to check|vérifier, contrôler|1|Please check the figures.
+coin|pièce de monnaie (pas coin)|1|The machine only takes coins.
+factory|usine|1|The factory closes in August.
+journey|trajet, voyage (pas journée)|1|The journey takes two hours.
+location|emplacement (pas location)|1|The hotel is in a great location.
+rental|location|1|Car rental is included.
+delay|retard (pas délai)|1|Sorry for the delay.
+kind|gentil|1|That's very kind of you.
+large|grand (pas large)|1|A large coffee, please.
+wide|large|1|The road is very wide.
+possibly|éventuellement|2|We could possibly meet on Monday.
+to assist|aider (pas assister à)|2|Can I assist you?
+to pretend|faire semblant (pas prétendre)|2|He pretended to be busy.
+to claim|prétendre, affirmer|2|He claims he sent the file.
+to achieve|atteindre, réaliser|2|We achieved our sales target.
+lecture|conférence, cours magistral|2|She gave a lecture on finance.
+disappointment|déception|2|The results were a disappointment.
+chance|probabilité, hasard|2|There's a good chance it will rain.
+fabric|tissu (pas fabrique)|2|The fabric is made in Italy.
+argument|dispute (pas argument)|2|They had an argument about money.
+issue|problème, question|2|We discussed several issues.
+gentle|doux (pas gentil)|2|Use a gentle soap.
+to support|soutenir (pas supporter)|2|The team supported my idea.
+to put up with|supporter, tolérer|2|I can't put up with the noise.
+miserable|malheureux (pas misérable)|2|He looked miserable after the meeting.
+to realize|se rendre compte (pas réaliser)|2|I realized I was late.
+opportunity|occasion, opportunité|2|It's a great opportunity.
+bargain|bonne affaire|2|This jacket was a real bargain.
+rude|impoli|2|The waiter was rude.
+deception|tromperie (pas déception)|3|The scheme was based on deception.
+to resume|reprendre (pas résumer)|3|Work will resume on Monday.
+occasion|circonstance, événement|3|A dinner for a special occasion.
+crude|brut, grossier|3|Crude oil prices fell.
+prejudice|préjugé|3|We fight prejudice at work.
+trade union|syndicat|3|The trade union called a strike.
+inhabited|habité (pas inhabité)|3|The island is inhabited.
+tentative|provisoire (pas tentative)|3|We set a tentative date for May.
+`},
+{k:'formal', n:'Vocabulaire soutenu', p:'Parts 5 · 7', w:`
+optional|facultatif|1|Attendance is optional.
+approximately|environ|1|It costs approximately $300.
+substantial|considérable|2|They made a substantial profit.
+adequate|suffisant, adéquat|2|The room has adequate lighting.
+mandatory|obligatoire|2|Training is mandatory for all staff.
+eager|impatient, désireux|2|She's eager to start.
+tremendous|énorme|2|It was a tremendous success.
+steady|régulier, stable|2|Sales show steady growth.
+sharp|brusque, marqué|2|There was a sharp rise in prices.
+promptly|rapidement, sans délai|2|Please reply promptly.
+exclusively|exclusivement|2|The offer is exclusively for members.
+temporarily|temporairement|2|The store is temporarily closed.
+sufficient|suffisant|2|We have sufficient funds.
+to implement|mettre en œuvre|2|The plan will be implemented in June.
+to oversee|superviser|2|She oversees the Asian market.
+to inquire|se renseigner|2|I'm writing to inquire about the job.
+inquiry|demande de renseignements|2|We received many inquiries.
+to ensure|garantir, s'assurer que|2|Please ensure the door is locked.
+to enclose|joindre (dans un courrier)|2|I have enclosed my résumé.
+to obtain|obtenir|2|You must obtain a permit.
+to proceed|continuer, procéder|2|Please proceed to gate 12.
+feasible|réalisable|3|Is the project feasible?
+prominent|important, en vue|3|She's a prominent lawyer.
+comprehensive|complet, détaillé|3|We offer comprehensive training.
+preliminary|préliminaire|3|The preliminary results are good.
+reluctant|réticent|3|He was reluctant to sign.
+thorough|minutieux, approfondi|3|We did a thorough review.
+diligent|appliqué, consciencieux|3|She's a diligent worker.
+meticulous|méticuleux|3|He keeps meticulous records.
+unprecedented|sans précédent|3|Demand reached unprecedented levels.
+marginal|faible, marginal|3|There was only a marginal increase.
+consistently|de façon constante|3|Our sales have grown consistently.
+tentatively|provisoirement|3|The meeting is tentatively set for Friday.
+respectively|respectivement|3|They came first and second respectively.
+subsequently|par la suite|3|He subsequently joined the board.
+inadvertently|par inadvertance|3|I inadvertently deleted the file.
+to anticipate|prévoir, anticiper|3|We anticipate strong demand.
+to commend|féliciter, saluer|3|The manager commended her work.
+to endorse|approuver, soutenir|3|The board endorsed the plan.
+to expedite|accélérer|3|We'll expedite your order.
+to adhere to|respecter|3|Staff must adhere to the dress code.
+to alleviate|atténuer|3|The new road will alleviate traffic.
+to undergo|subir, faire l'objet de|3|The building will undergo renovations.
+to waive|renoncer à, exonérer|3|The fee will be waived for members.
+to solicit|solliciter|3|We are soliciting feedback from clients.
+to reiterate|réitérer|3|I'd like to reiterate our offer.
+to deem|juger, estimer|3|The plan was deemed too costly.
+to be entitled to|avoir droit à|3|Members are entitled to a discount.
+to acknowledge|accuser réception, reconnaître|3|Please acknowledge receipt of this letter.
+to retain|conserver|3|Retain your receipt as proof of purchase.
+to surpass|surpasser|3|Sales surpassed our forecast.
+to undertake|entreprendre|3|We undertook a major review.
+`}
+];
+const NOTION_FALLBACK = [
+["Break a leg","« Good luck », l'équivalent de « merde » au théâtre","Expression","",""],
+["premises","Locaux (travail)","Mot inconnu","",""],
+["Sore","Causing pain : douleur, douloureux","Mot inconnu","",""],
+["Give in","abandonner, renoncer, céder à","Expression","I tried to resist the chocolate cake, but I finally gave in",""],
+["Articulate","qui s'exprime bien, clair, précis","Mot inconnu","",""],
+["A great deal of stress","Grosse pression, tension, stress","Expression","",""],
+["By next week","À la semaine prochaine","Erreur de grammaire","","Toujours mettre du futur avec « will »"],
+["Display","démonstration (de qqch), affichage (informatique)","Mot inconnu","",""],
+["Brightly","avec éclat, de mille feux, joyeusement","Mot inconnu","",""],
+["Failing to do so","ne pas parvenir à faire","Expression","",""],
+["Fine","Amende, contravention","Mot inconnu","",""],
+["State of the road","état de la route, conditions routières","Expression","",""],
+["Tangible","réel, concret","Mot inconnu","",""],
+["While","pendant que, tant que, alors que, bien que","Erreur de vocabulaire","",""],
+["fee","frais","Mot inconnu","There is a small fee for late payment.",""],
+["benefits","avantages sociaux","Mot inconnu","The company offers health benefits to all staff.",""],
+["sensible","raisonnable","Faux ami","It is sensible to book the tickets early.","Sensible veut dire raisonnable. Pour dire sensible, on utilise sensitive."],
+["to attend","assister à","Faux ami","All employees must attend the training session.","To attend veut dire assister à. Pour dire attendre, on utilise to wait for."],
+["complaint","réclamation","Mot inconnu","She filed a complaint about the delay.",""],
+["fare","tarif (transport)","Mot inconnu","A train fare costs more at peak hours.",""],
+["invoice","facture","Mot inconnu","Please send the invoice by e-mail.",""],
+["minutes","compte rendu","Mot inconnu","Who will take the minutes of the meeting?","Au pluriel, minutes désigne le compte rendu d'une réunion."],
+["workload","charge de travail","Mot inconnu","Her workload has doubled since March.",""],
+["memo","note de service","Mot inconnu","The manager sent a memo about the new schedule.",""],
+["to postpone","reporter","Mot inconnu","The meeting was postponed until Friday.",""],
+["warranty","garantie","Mot inconnu","The laptop comes with a two-year warranty.",""],
+["shipment","expédition","Mot inconnu","The shipment arrived a day late.",""],
+["to follow up","faire un suivi","Expression","I am writing to follow up on our call.",""],
+["overdue","en retard (paiement)","Mot inconnu","The payment is two weeks overdue.",""],
+["on behalf of","au nom de","Expression","I am writing on behalf of the sales team.",""],
+["to run out of","manquer de","Expression","We are running out of paper.","To run out of se construit avec un nom."],
+["outstanding balance","solde impayé","Expression","Your outstanding balance is $250.",""],
+["sensitive","sensible","Faux ami","Please keep this sensitive information private.","Sensitive veut dire sensible (émotions, informations confidentielles). Ne pas confondre avec sensible."],
+["shareholder","actionnaire","Mot inconnu","Shareholders will vote on the plan in June.",""],
+["to be likely to","être susceptible de","Expression","Prices are likely to rise next year.","To be likely to se construit avec un verbe à l'infinitif."],
+["to refund","rembourser","Mot inconnu","We will refund you within ten days.",""],
+["inventory","stocks","Mot inconnu","We check our inventory every month.",""],
+["quote","devis","Mot inconnu","We asked three suppliers for a quote.",""]
+];
+const NOTION_DS='collection://6dfe143f-6f56-46eb-be23-34a7757a77d8';
+const NOTION_DATE='30 oct.';
+
+const ICONS={
+briefcase:'<rect x="3" y="7" width="18" height="13" rx="2.5"/><path d="M8.5 7V5.5A1.5 1.5 0 0 1 10 4h4a1.5 1.5 0 0 1 1.5 1.5V7M3 12.5h18"/>',
+people:'<circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><circle cx="17.2" cy="9" r="2.5"/><path d="M16.2 14.1c2.8.4 4.8 2.8 4.8 5.9"/>',
+coins:'<ellipse cx="10" cy="6.5" rx="6" ry="2.8"/><path d="M4 6.5v4.5c0 1.5 2.7 2.8 6 2.8s6-1.3 6-2.8V6.5"/><path d="M8 15.6v1.7c0 1.5 2.7 2.8 6 2.8s6-1.3 6-2.8v-4.6c0-1.3-2-2.4-4.6-2.7"/>',
+cart:'<path d="M3 4h2.2l2.3 11h10.8l2-8H6.3"/><circle cx="9" cy="19.5" r="1.4"/><circle cx="17" cy="19.5" r="1.4"/>',
+megaphone:'<path d="M4 9.5v5h3l8 4.5v-14L7 9.5H4z"/><path d="M18.5 9a4 4 0 0 1 0 6M7 14.5l1.5 5"/>',
+plane:'<path d="M20.5 15.5 13 11V4.8a1.5 1.5 0 0 0-3 0V11l-7.5 4.5V17l7.5-2.3v4.6L8 20.8V22l3.5-1 3.5 1v-1.2l-2-1.5v-4.6l7.5 2.3z"/>',
+fork:'<path d="M7 3v8M4.5 3v5a2.5 2.5 0 0 0 5 0V3M7 11v10M17.5 3c-2.2 1-3.5 3.7-3.5 7.5h3.5V21"/>',
+building:'<rect x="4" y="3" width="10" height="18" rx="1.5"/><path d="M14 9h4.5a1.5 1.5 0 0 1 1.5 1.5V21M2.5 21h19M7.5 7h3M7.5 11h3M7.5 15h3"/>',
+camera:'<path d="M4 8h3l1.8-2.6h6.4L17 8h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13.5" r="3.6"/>',
+box:'<path d="M3 7.5 12 3l9 4.5v9L12 21l-9-4.5z"/><path d="M3 7.5 12 12l9-4.5M12 12v9M7.5 5.2l9 4.5"/>',
+laptop:'<rect x="5" y="5" width="14" height="10" rx="1.6"/><path d="M2.5 19h19"/>',
+heart:'<path d="M12 20s-7.5-4.6-7.5-10A4.2 4.2 0 0 1 12 7.3 4.2 4.2 0 0 1 19.5 10c0 5.4-7.5 10-7.5 10z"/><path d="M7 12h3l1.2-2 1.6 4 1.2-2h3"/>',
+arrow:'<path d="M4 12h14M13 6l6 6-6 6"/><circle cx="4.5" cy="12" r="1.5"/>',
+link:'<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/>',
+swap:'<path d="M7 4 3 8l4 4M3 8h13M17 12l4 4-4 4M21 16H8"/>',
+pen:'<path d="M15.5 4.5 19.5 8.5 9 19H5v-4z"/><path d="M13 7l4 4"/>',
+bookmark:'<path d="M6 3.5h12v17l-6-4-6 4z"/><path d="m9.5 9.5 1.8 1.8 3.4-3.6"/>',
+flame:'<path d="M12 21c-3.9 0-6.5-2.6-6.5-6.1 0-3.8 3-5.7 3.5-9.9 2.6 1.6 4 4 4.1 6.2 1-1 1.5-2.3 1.6-3.6 2.4 1.9 3.8 4.6 3.8 7.3 0 3.5-2.6 6.1-6.5 6.1z"/>',
+play:'<path d="M7 4.5v15l12-7.5z"/>',
+check:'<path d="m5 12.5 4.5 4.5L19 7.5"/>',
+chev:'<path d="m9 5 7 7-7 7"/>',
+back:'<path d="m15 5-7 7 7 7"/>',
+x:'<path d="M6 6l12 12M18 6 6 18"/>',
+info:'<circle cx="12" cy="12" r="9"/><path d="M12 11v5.5M12 7.6v.1"/>',
+target:'<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1" fill="currentColor"/>',
+layers:'<path d="m12 3 9 5-9 5-9-5z"/><path d="m3 13 9 5 9-5"/>',
+sparkle:'<path d="M12 3.5 13.8 10l6.7 2-6.7 2L12 20.5 10.2 14l-6.7-2 6.7-2z"/>',
+rotate:'<path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4.5V11h-6.5"/>',
+home:'<path d="M3.5 11 12 4l8.5 7M6 9.5V20h12V9.5"/><path d="M10 20v-5h4v5"/>',
+cal:'<rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',
+trash:'<path d="M4 7h16M9.5 7V4.5h5V7M6.5 7l1 13h9l1-13"/>'
+};
+function ic(n,cls){return `<svg class="ic ${cls||''}" viewBox="0 0 24 24" aria-hidden="true">${ICONS[n]||''}</svg>`;}
+function LOGO(rx){return `<svg viewBox="0 0 512 512" aria-hidden="true"><defs><linearGradient id="lgbg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4469FF"/><stop offset="1" stop-color="#1C33C4"/></linearGradient></defs><rect width="512" height="512" rx="${rx==null?112:rx}" fill="url(#lgbg)"/><g transform="rotate(-11 256 272)"><rect x="128" y="120" width="236" height="300" rx="38" fill="#8EAEFF"/></g><g transform="rotate(7 268 268)"><rect x="150" y="112" width="236" height="300" rx="38" fill="#FFFFFF"/><rect x="190" y="168" width="156" height="24" rx="12" fill="#D7E0FF"/><rect x="190" y="212" width="104" height="24" rx="12" fill="#D7E0FF"/><circle cx="212" cy="336" r="22" fill="none" stroke="#2440D8" stroke-width="9"/><circle cx="268" cy="336" r="22" fill="#FFC93C" stroke="#2440D8" stroke-width="9"/><circle cx="324" cy="336" r="22" fill="none" stroke="#2440D8" stroke-width="9"/></g></svg>`;}
+
+const DECK_STYLE={mine:['#F5B700','bookmark','#1E1A0A'],office:['#3B6CF6','briefcase'],hr:['#EF6A4C','people'],finance:['#14A06B','coins'],purchasing:['#E39500','cart'],sales:['#DB4C8F','megaphone'],travel:['#1AA3D9','plane'],hotel:['#E5822F','fork'],property:['#7C5CE0','building'],photo:['#23A99A','camera'],production:['#5D6B82','box'],tech:['#4357D9','laptop'],health:['#DD3F5A','heart'],phrasal:['#9A57D1','arrow'],linkers:['#0F97A8','link'],falsefriends:['#C9622B','swap'],formal:['#34406A','pen'],all:['#2B4EF0','layers'],weak:['#E5484D','target']};
+function ds(k){const s=DECK_STYLE[k]||DECK_STYLE.all;return {c:s[0],i:s[1],ink:s[2]||'#FFFFFF'};}
+function dvars(k){const d=ds(k);return `--deck:${d.c};--deck-ink:${d.ink}`;}
+
+const LEVELS={0:{name:'Mes mots',cls:'l0',range:'Notion'},1:{name:'Bases',range:'470–725',cls:'l1'},2:{name:'Avancé',range:'730–855',cls:'l2'},3:{name:'Expert',range:'860–990',cls:'l3'}};
+const INTERVALS=[0,1,3,7,16,35];
+const ACQUIRED=4;
+
+/* ---------- Cards ---------- */
+function hash(s){let h=2166136261;for(const ch of s){h^=ch.codePointAt(0);h=Math.imul(h,16777619);}return (h>>>0).toString(36);}
+const CARDS=[],BY_ID={},DECK_MAP={};
+DECKS.forEach(d=>{
+  d.cards=[];DECK_MAP[d.k]=d;const seen=new Set();
+  d.w.trim().split('\n').forEach(line=>{
+    const [en,fr,l,ex]=line.split('|').map(s=>(s||'').trim());if(!en||!fr)return;
+    const id='c'+hash(d.k+':'+en.toLowerCase());if(seen.has(id))return;seen.add(id);
+    const c={id,deck:d.k,en,fr,lvl:+l||1,ex:ex||'',note:'',type:''};d.cards.push(c);CARDS.push(c);BY_ID[id]=c;
+  });
+});
+const MINE={k:'mine',n:'Mes mots',p:'Ta base Notion',cards:[]};DECK_MAP.mine=MINE;
+function rebuildMine(){
+  MINE.cards.forEach(c=>{delete BY_ID[c.id];});MINE.cards=[];const seen=new Set();
+  (S.notion||NOTION_FALLBACK).forEach(r=>{const [en,fr,type,ex,note]=r;if(!en)return;const id='n'+hash(en.toLowerCase());if(seen.has(id))return;seen.add(id);
+    const c={id,deck:'mine',en,fr:fr||'(pas de traduction dans Notion)',lvl:0,ex:ex||'',note:note||'',type:type||''};MINE.cards.push(c);BY_ID[id]=c;});
+}
+
+/* ---------- State ---------- */
+const LS_KEY='toeic-flashcards-v1';
+function defaultState(){return {v:1,cards:{},days:{},settings:{dir:'en',levels:[1,2,3],newPer:15,goal:20},notion:null,notionAt:0,updatedAt:0};}
+function normalize(p){const s=Object.assign(defaultState(),p||{});s.settings=Object.assign(defaultState().settings,s.settings||{});if(!Array.isArray(s.settings.levels)||!s.settings.levels.length)s.settings.levels=[1,2,3];s.cards=s.cards||{};s.days=s.days||{};return s;}
+let S=defaultState();
+try{const raw=localStorage.getItem(LS_KEY);if(raw){const p=JSON.parse(raw);if(p&&p.v===1)S=normalize(p);}}catch(e){}
+rebuildMine();
+const IN_CLAUDE=!!(window.claude&&typeof window.claude.use==='function');
+const remote={ref:null,writing:false,pending:false,timer:0};
+function save(){
+  S.updatedAt=Date.now();
+  try{localStorage.setItem(LS_KEY,JSON.stringify(S));}catch(e){}
+  if(remote.ref){clearTimeout(remote.timer);remote.timer=setTimeout(flushRemote,2000);}
+}
+async function flushRemote(){
+  if(!remote.ref)return;if(remote.writing){remote.pending=true;return;}
+  remote.writing=true;
+  try{await remote.ref.set(JSON.parse(JSON.stringify(S)));}catch(e){}
+  finally{remote.writing=false;if(remote.pending){remote.pending=false;flushRemote();}}
+}
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'&&remote.timer){clearTimeout(remote.timer);remote.timer=0;flushRemote();}});
+async function initRemote(){
+  if(!IN_CLAUDE)return;
+  try{
+    const [db,user]=await Promise.all([window.claude.use('db'),window.claude.use('user')]);
+    if(!db||!user)return;const uid=await user.id();if(!uid)return;
+    const ref=db.doc('data/users/'+uid+'/progress');const snap=await ref.get();remote.ref=ref;
+    if(snap.exists){const d=snap.data();
+      if(d&&d.v===1&&(d.updatedAt||0)>(S.updatedAt||0)){
+        if(!session&&!quiz){S=normalize(JSON.parse(JSON.stringify(d)));try{localStorage.setItem(LS_KEY,JSON.stringify(S));}catch(e){}rebuildMine();render();}
+      } else if((S.updatedAt||0)>((d&&d.updatedAt)||0)) flushRemote();
+    } else if(S.updatedAt) flushRemote();
+  }catch(e){}
+}
+
+/* ---------- Helpers ---------- */
+const $=id=>document.getElementById(id);
+function dayNum(d=new Date()){return Math.floor((d.getTime()-d.getTimezoneOffset()*60000)/86400000);}
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function allCards(){return MINE.cards.concat(CARDS);}
+function deckCards(k){return k==='all'?allCards():(DECK_MAP[k]?DECK_MAP[k].cards:[]);}
+function filtered(cs){const L=S.settings.levels;return cs.filter(c=>c.lvl===0||L.includes(c.lvl));}
+function st(c){return S.cards[c.id];}
+function isDue(c,t){const s=st(c);return !!s&&s[1]<=t;}
+function deckName(k){return k==='all'?'Toutes les listes':k==='weak'?'Mots fragiles':(DECK_MAP[k]?DECK_MAP[k].n:'');}
+function streak(){let t=dayNum();if(!S.days[t])t--;let n=0;while(S.days[t]){n++;t--;}return n;}
+function plural(n,w,ws){return n+' '+(n>1?(ws||w+'s'):w);}
+function status(c){const s=st(c);if(!s)return 'new';if(s[0]>=ACQUIRED)return 's2';if(s[0]===0)return 's0';return 's1';}
+function lvTag(c){const L=LEVELS[c.lvl];return `<span class="lv ${L.cls}"><i></i>${c.lvl===0?esc(c.type||'Mes mots'):L.name}</span>`;}
+function ring(p,size,sw,col,track){const r=(size-sw)/2,C=2*Math.PI*r,h=size/2;p=Math.max(0,Math.min(1,p||0));
+  return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" aria-hidden="true"><circle cx="${h}" cy="${h}" r="${r}" fill="none" style="stroke:${track}" stroke-width="${sw}"/><circle cx="${h}" cy="${h}" r="${r}" fill="none" style="stroke:${col}" stroke-width="${sw}" stroke-linecap="round" stroke-dasharray="${C.toFixed(2)}" stroke-dashoffset="${(C*(1-p)).toFixed(2)}" transform="rotate(-90 ${h} ${h})"/></svg>`;}
+function deckCounts(cs,t){let acq=0,lrn=0,due=0;cs.forEach(c=>{const s=st(c);if(s){if(s[0]>=ACQUIRED)acq++;else lrn++;if(s[1]<=t)due++;}});return {acq,lrn,due,n:cs.length};}
+
+/* ---------- Routing ---------- */
+let route={v:'home'},session=null,quiz=null,quizDeck='all',quizMsg='',resetAsk=false,notionMsg='';
+function go(v,extra){route=Object.assign({v},extra||{});if(v!=='study')session=null;if(v!=='quiz')quiz=null;resetAsk=false;render();window.scrollTo(0,0);}
+function render(){
+  const m=$('main');
+  const tabs=!(route.v==='study'||(route.v==='quiz'&&quiz));
+  $('tabbar').hidden=!tabs;document.body.classList.toggle('has-tabs',tabs);
+  const cur=route.v==='deck'?'home':route.v;
+  document.querySelectorAll('.tabbar button').forEach(b=>{if(b.dataset.tab===cur)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');});
+  m.className='';
+  if(route.v==='home')m.innerHTML=vHome();
+  else if(route.v==='deck')m.innerHTML=vDeck(route.k);
+  else if(route.v==='study')m.innerHTML=vStudy();
+  else if(route.v==='quiz')m.innerHTML=vQuiz();
+  else if(route.v==='stats')m.innerHTML=vStats();
+  else m.innerHTML=vSettings();
+  if(route.anim!==false){m.classList.add('rise');}
+  if(route.v==='study')bindSwipe();
+}
+document.querySelectorAll('.tabbar button').forEach(b=>b.addEventListener('click',()=>go(b.dataset.tab)));
+
+/* ---------- Home ---------- */
+function vHome(){
+  const t=dayNum(),all=filtered(allCards());
+  const due=all.filter(c=>isDue(c,t)).length,fresh=all.filter(c=>!st(c)).length;
+  const nw=Math.min(fresh,S.settings.newPer),total=due+nw;
+  const today=S.days[t]||0,goal=S.settings.goal,sk=streak();
+  const date=new Date().toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'});
+  const headline=today>=goal?'Objectif atteint':today>0?'Bien lancé, continue':total?'Ta session du jour':'Tout est à jour';
+  const sub=total?`${plural(due,'carte')} à revoir et ${plural(nw,'nouveau mot','nouveaux mots')} t'attendent.`:'Reviens demain ou lance un quiz pour t\'entraîner.';
+  const mc=deckCounts(MINE.cards,t);
+  let h=`<header class="hdr"><div class="brand">${LOGO()}<div><h1>Bulle</h1><small>Vocabulaire TOEIC</small></div></div>
+    <div class="streak${sk?'':' off'}" title="Jours d'affilée">${ic('flame')}<span>${sk}</span></div></header>
+  <section class="hero">
+    <div class="dots" aria-hidden="true"><i></i><i class="f"></i><i></i><i></i><i></i><i></i><i></i><i class="f"></i><i class="f"></i><i></i><i></i><i></i></div>
+    <div class="hero-top">
+      <div class="ringwrap">${ring(today/goal,92,10,'#FFFFFF','rgba(255,255,255,.22)')}<div class="ctr"><div><b class="mono">${today}</b><span>/ ${goal}</span></div></div></div>
+      <div style="min-width:0"><div class="eyebrow" style="color:rgba(255,255,255,.75)">${esc(date)}</div><h2>${headline}</h2><p>${sub}</p></div>
+    </div>
+    <button class="go" data-act="study" data-v="all" ${total?'':'disabled'}>${ic(total?'play':'check')}${total?`Commencer · ${plural(total,'carte')}`:'Rien à réviser'}</button>
+  </section>
+  <button class="wide" style="${dvars('mine')}" data-act="deck" data-v="mine">
+    <span class="chip">${ic('bookmark')}</span>
+    <span class="mid"><b>Mes mots</b><span class="tp">${MINE.cards.length} mots de ta base Notion · ${mc.acq} acquis</span>
+      <span class="pbar"><span class="a" style="width:${mc.n?mc.acq/mc.n*100:0}%"></span><span class="r" style="width:${mc.n?mc.lrn/mc.n*100:0}%"></span></span></span>
+    ${mc.due?`<span class="badge">${mc.due}</span>`:''}<span class="chev">${ic('chev')}</span>
+  </button>
+  <div class="sec-h"><h2>Listes thématiques</h2><span class="eyebrow">${CARDS.length} mots</span></div>
+  <div class="grid">`;
+  DECKS.forEach(d=>{const cs=filtered(d.cards),c=deckCounts(cs,t),st_=ds(d.k);
+    h+=`<button class="tile" style="${dvars(d.k)}" data-act="deck" data-v="${d.k}" id="tile-${d.k}">
+      <span class="chip">${ic(st_.i)}</span>${c.due?`<span class="badge">${c.due}</span>`:''}
+      <span class="tn">${esc(d.n)}</span><span class="tp">${esc(d.p)}</span>
+      <span class="foot"><span class="pbar"><span class="a" style="width:${c.n?c.acq/c.n*100:0}%"></span><span class="r" style="width:${c.n?c.lrn/c.n*100:0}%"></span></span>
+      <span class="tc">${c.acq}/${c.n} acquis</span></span></button>`;});
+  h+=`</div><p class="foot-note">Niveaux affichés : ${S.settings.levels.map(l=>LEVELS[l].name).join(', ')}. Modifiable dans Réglages.</p>`;
+  return h;
+}
+
+/* ---------- Deck ---------- */
+function vDeck(k){
+  const d=DECK_MAP[k];if(!d)return vHome();
+  const t=dayNum(),cs=k==='mine'?d.cards:filtered(d.cards),c=deckCounts(cs,t),style=ds(k);
+  const fresh=cs.filter(x=>!st(x)).length;
+  const order={s0:0,s1:1,new:2,s2:3};
+  const rows=cs.slice().sort((a,b)=>order[status(a)]-order[status(b)]||a.lvl-b.lvl);
+  return `<div class="topnav"><button class="backbtn" data-act="home">${ic('back')}Listes</button><span class="eyebrow">${esc(d.p)}</span></div>
+  <section class="dhead" style="${dvars(k)}">${ic(style.i,'wm')}
+    <h2>${esc(d.n)}</h2><div class="tp">${cs.length} mots${k==='mine'?' · synchronisés depuis Notion':''}</div>
+    <div class="dstats"><div><b class="mono">${c.acq}</b><span>acquis</span></div><div><b class="mono">${c.due}</b><span>à revoir</span></div><div><b class="mono">${fresh}</b><span>nouveaux</span></div></div>
+    <div class="dbtns"><button class="p" data-act="study" data-v="${k}">${ic('play')}Réviser</button><button class="s" data-act="quiz" data-v="${k}">${ic('target')}Quiz</button></div>
+  </section>
+  <div class="legend"><span><i style="background:var(--bad)"></i>à revoir</span><span><i style="background:var(--mid)"></i>en cours</span><span><i style="background:var(--good)"></i>acquis</span><span><i style="background:var(--soft);border:2px solid var(--line)"></i>jamais vu</span></div>
+  <section class="card-s wlist">${rows.map(x=>`<div class="wrow"><span class="dot ${status(x)}"></span><b>${esc(x.en)}</b>${lvTag(x)}<small>${esc(x.fr)}</small></div>`).join('')}</section>`;
+}
+
+/* ---------- Study ---------- */
+function startSession(k){
+  const t=dayNum(),cs=k==='mine'?deckCards(k):filtered(deckCards(k));
+  const due=shuffle(cs.filter(c=>isDue(c,t)));
+  let nw=cs.filter(c=>!st(c));if(k==='all'){shuffle(nw);}nw.sort((a,b)=>a.lvl-b.lvl);nw=nw.slice(0,S.settings.newPer);
+  let q=due.concat(nw).map(c=>c.id),practice=false;
+  if(!q.length){practice=true;q=shuffle(cs.slice()).sort((a,b)=>((st(a)||[9])[0])-((st(b)||[9])[0])).slice(0,15).map(c=>c.id);if(!q.length)return;}
+  session={k,queue:q,idx:0,total:q.length,flipped:false,tally:[0,0,0],dir:'en',practice,celebrated:false};
+  nextDir();route={v:'study'};render();window.scrollTo(0,0);
+}
+function nextDir(){const d=S.settings.dir;session.dir=d==='mix'?(Math.random()<.5?'en':'fr'):d;session.flipped=false;}
+function nextLabel(c,g){const s=st(c);if(g===0)return 'maintenant';if(g===1)return 'demain';const nb=!s?2:Math.min(5,s[0]+1),d=INTERVALS[nb];return d===1?'demain':'dans '+d+' j';}
+function vStudy(){
+  const s=session;const done=s.tally[1]+s.tally[2];
+  const top=`<div class="sbar"><button class="xbtn" data-act="close" aria-label="Quitter la session">${ic('x')}</button>
+    <div class="prog"><span style="width:${Math.min(done,s.total)/s.total*100}%"></span></div><span class="scount">${Math.min(done,s.total)}/${s.total}</span></div>`;
+  if(s.idx>=s.queue.length){
+    const pct=done?Math.round(s.tally[2]/(s.tally[0]+s.tally[1]+s.tally[2])*100):0;
+    if(!s.celebrated){s.celebrated=true;setTimeout(confetti,120);}
+    return top+`<section class="card-s done">
+      <div class="ringwrap">${ring(pct/100,120,12,'var(--good)','var(--soft)')}<div class="ctr"><div><b class="mono" style="color:var(--ink)">${pct}%</b><span class="muted">réussite</span></div></div></div>
+      <h2>Session terminée</h2><p class="muted" style="margin:0">${esc(deckName(s.k))} · ${plural(done,'carte révisée','cartes révisées')}</p>
+      <div class="tally"><div class="a"><b class="mono">${s.tally[0]}</b><span>à revoir</span></div><div class="h"><b class="mono">${s.tally[1]}</b><span>hésité</span></div><div class="g"><b class="mono">${s.tally[2]}</b><span>su</span></div></div>
+      <button class="bigbtn" data-act="close">${ic('check')}Terminer</button>
+      <button class="bigbtn alt" data-act="quiz" data-v="${s.k}">${ic('target')}Enchaîner sur un quiz</button>
+    </section>`;
+  }
+  const c=BY_ID[s.queue[s.idx]];if(!c){s.idx++;return vStudy();}
+  const front=s.dir==='en'?c.en:c.fr,back=s.dir==='en'?c.fr:c.en,dk=c.deck,style=ds(dk);
+  const L=LEVELS[c.lvl];
+  return top+`<div class="swiper" id="swiper" style="${dvars(dk)}"><span class="stamp g">JE SAVAIS</span><span class="stamp b">À REVOIR</span>
+    <div class="flip"><div class="card${s.flipped?' flipped':''}" id="card" data-act="flip" role="button" tabindex="0" aria-label="${s.flipped?'Carte retournée':'Retourner la carte'}">
+      <div class="face front" aria-hidden="${s.flipped}">${ic(style.i,'wm')}
+        <div class="fhead"><span class="tag"><i></i>${c.lvl===0?esc(c.type||'Mes mots'):L.name+' · '+L.range}</span><span class="tag">${esc(deckName(dk))}</span></div>
+        <div class="fbody"><span class="dir">${s.dir==='en'?'Anglais → français':'Français → anglais'}</span><div class="word${front.length>20?' long':''}">${esc(front)}</div></div>
+        <div class="taphint">Touche pour retourner</div>
+      </div>
+      <div class="face back" aria-hidden="${!s.flipped}">
+        <div class="fhead"><span class="q-small">${esc(front)}</span>${lvTag(c)}</div>
+        <div class="fbody"><div class="word${back.length>20?' long':''}">${esc(back)}</div>
+          ${c.ex?`<div class="ex">${esc(c.ex)}</div>`:''}
+          ${c.note?`<div class="rule">${ic('info')}<span>${esc(c.note)}</span></div>`:''}</div>
+      </div>
+    </div></div></div>
+  ${s.flipped?`<div class="grades"><button class="g0" data-act="grade" data-v="0">À revoir<small>${nextLabel(c,0)}</small></button><button class="g1" data-act="grade" data-v="1">Hésité<small>${nextLabel(c,1)}</small></button><button class="g2" data-act="grade" data-v="2">Je savais<small>${nextLabel(c,2)}</small></button></div>
+    <p class="swipehint">Ou glisse la carte : à droite si tu savais, à gauche pour la revoir</p>`
+  :`<button class="bigbtn" data-act="flip">${ic('rotate')}Voir la réponse</button>`}`;
+}
+function flip(){
+  if(!session||session.idx>=session.queue.length||session.flipped)return;
+  session.flipped=true;const card=$('card');if(card)card.classList.add('flipped');
+  const rm=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  setTimeout(()=>{if(session&&session.flipped){route.anim=false;render();route.anim=true;$('main').classList.remove('rise');}},rm?0:420);
+}
+function grade(g){
+  const s=session;if(!s||!s.flipped)return;const c=BY_ID[s.queue[s.idx]],t=dayNum();
+  const prev=st(c),isNew=!prev,n=prev?prev.slice():[0,t,0,0];n[3]=(n[3]||0)+1;
+  if(g===0){n[0]=0;n[1]=t;n[2]=(n[2]||0)+1;}else if(g===1){n[0]=Math.max(1,n[0]);n[1]=t+1;}else{n[0]=isNew?2:Math.min(5,n[0]+1);n[1]=t+INTERVALS[n[0]];}
+  if(!s.practice||g===0||!prev){S.cards[c.id]=n;}
+  S.days[t]=(S.days[t]||0)+1;s.tally[g]++;
+  if(g===0){s.queue.splice(Math.min(s.idx+4,s.queue.length),0,c.id);}
+  s.idx++;save();nextDir();render();
+}
+function bindSwipe(){
+  const el=$('swiper');if(!el||!session||!session.flipped)return;
+  let x0=null,y0=0,dx=0,drag=false;
+  el.addEventListener('pointerdown',e=>{x0=e.clientX;y0=e.clientY;dx=0;drag=false;});
+  el.addEventListener('pointermove',e=>{if(x0==null)return;dx=e.clientX-x0;const dy=e.clientY-y0;
+    if(!drag&&Math.abs(dx)>8&&Math.abs(dx)>Math.abs(dy)){drag=true;try{el.setPointerCapture(e.pointerId);}catch(_){}el.style.transition='none';}
+    if(drag){el.style.transform=`translateX(${dx}px) rotate(${dx/22}deg)`;el.dataset.hint=dx>50?'good':dx<-50?'bad':'';}});
+  const end=()=>{if(x0==null)return;x0=null;el.style.transition='';
+    if(drag&&Math.abs(dx)>95){const g=dx>0?2:0;el.style.transform=`translateX(${dx>0?'120vw':'-120vw'}) rotate(${dx>0?18:-18}deg)`;setTimeout(()=>grade(g),200);}
+    else{el.style.transform='';el.dataset.hint='';}drag=false;};
+  el.addEventListener('pointerup',end);el.addEventListener('pointercancel',end);
+}
+function confetti(){
+  if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+  const cv=document.createElement('canvas');cv.className='confetti';document.body.appendChild(cv);
+  const dpr=window.devicePixelRatio||1,W=innerWidth,H=innerHeight;cv.width=W*dpr;cv.height=H*dpr;const ctx=cv.getContext('2d');ctx.scale(dpr,dpr);
+  const cols=['#3B6CF6','#FFC93C','#EF6A4C','#14A06B','#DB4C8F','#1AA3D9','#9A57D1'];
+  const ps=Array.from({length:130},()=>({x:W/2+(Math.random()-.5)*120,y:H*.32,vx:(Math.random()-.5)*11,vy:-Math.random()*10-4,r:Math.random()*6,vr:(Math.random()-.5)*.35,w:7+Math.random()*6,h:4+Math.random()*4,c:cols[Math.random()*cols.length|0],o:Math.random()<.35}));
+  let f=0;(function step(){ctx.clearRect(0,0,W,H);ps.forEach(p=>{p.vy+=.28;p.vx*=.985;p.x+=p.vx;p.y+=p.vy;p.r+=p.vr;ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.r);ctx.fillStyle=p.c;
+    if(p.o){ctx.beginPath();ctx.arc(0,0,p.w/2.3,0,7);ctx.fill();}else ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h);ctx.restore();});
+    if(++f<160)requestAnimationFrame(step);else cv.remove();})();
+}
+
+/* ---------- Quiz ---------- */
+function startQuiz(k){
+  let pool=k==='weak'?filtered(allCards()).filter(c=>{const s=st(c);return s&&s[0]<2;}):(k==='mine'?deckCards(k):filtered(deckCards(k)));
+  if(pool.length<4){quiz=null;quizMsg='Pas assez de mots dans cette liste avec tes niveaux. Élargis les niveaux dans Réglages.';route={v:'quiz'};render();return;}
+  quizMsg='';const wide=filtered(allCards());
+  const items=shuffle(pool.slice()).slice(0,10).map(c=>{
+    const dir=S.settings.dir==='mix'?(Math.random()<.5?'en':'fr'):S.settings.dir,key=x=>dir==='en'?x.fr:x.en,right=key(c),used=new Set([right.toLowerCase()]),dis=[];
+    for(const src of [shuffle(pool.filter(x=>x!==c&&x.lvl===c.lvl)),shuffle(pool.filter(x=>x!==c)),shuffle(wide.filter(x=>x!==c))]){for(const x of src){if(dis.length>=3)break;const v=key(x);if(!used.has(v.toLowerCase())){used.add(v.toLowerCase());dis.push(v);}}if(dis.length>=3)break;}
+    const options=shuffle([right].concat(dis));return {c,dir,options,answer:options.indexOf(right),picked:null};});
+  quiz={k,items,i:0,score:0,celebrated:false};route={v:'quiz'};render();window.scrollTo(0,0);
+}
+function vQuiz(){
+  if(!quiz){
+    const t=dayNum(),weak=filtered(allCards()).filter(c=>{const s=st(c);return s&&s[0]<2;}).length;
+    const opts=[['all','Tout'],['mine','Mes mots']].concat(DECKS.map(d=>[d.k,d.n]));
+    return `<div class="sec-h" style="padding-top:8px"><h2 style="font-size:1.9rem">Quiz</h2></div>
+    <section class="qhero"><div class="sheet" aria-hidden="true"><div><i></i><i class="f"></i><i></i><i></i></div><div><i></i><i></i><i></i><i class="f"></i></div><div><i class="f"></i><i></i><i></i><i></i></div></div>
+      <h2>10 questions, 4 réponses</h2><p>Comme au TOEIC, une seule bonne bulle. Chaque erreur repart dans tes cartes à revoir.</p></section>
+    ${quizMsg?`<div class="card-s note">${esc(quizMsg)}</div>`:''}
+    <div class="sec-h"><h2 style="font-size:1.1rem">Choisis une liste</h2></div>
+    <div class="dpick">${opts.map(([k,n])=>`<button style="${dvars(k)}" data-act="qdeck" data-v="${k}" aria-pressed="${k===quizDeck}"><i></i>${esc(n)}</button>`).join('')}</div>
+    <button class="bigbtn" data-act="qstart">${ic('play')}Lancer le quiz</button>
+    ${weak>=4?`<button class="bigbtn alt" data-act="quiz" data-v="weak">${ic('target')}Quiz sur mes ${weak} mots fragiles</button>`:''}`;
+  }
+  const q=quiz;
+  if(q.i>=q.items.length){
+    const miss=q.items.filter(it=>it.picked!==it.answer),pct=q.score/q.items.length;
+    if(!q.celebrated&&pct>=.7){q.celebrated=true;setTimeout(confetti,120);}
+    return `<section class="card-s done">
+      <div class="ringwrap">${ring(pct,120,12,pct>=.7?'var(--good)':pct>=.4?'var(--mid)':'var(--bad)','var(--soft)')}<div class="ctr"><div><b class="mono" style="color:var(--ink)">${q.score}/${q.items.length}</b><span class="muted">bonnes</span></div></div></div>
+      <h2>${pct===1?'Sans faute':pct>=.7?'Bien joué':'On continue'}</h2><p class="muted" style="margin:0">${esc(deckName(q.k))}</p>
+      ${miss.length?`<div class="miss">${miss.map(it=>`<div><b>${esc(it.c.en)}</b><span>${esc(it.c.fr)}</span></div>`).join('')}</div>`:''}
+      <button class="bigbtn" data-act="quiz" data-v="${q.k}">${ic('rotate')}Nouveau quiz</button>
+      <button class="bigbtn alt" data-act="qquit">Changer de liste</button></section>`;
+  }
+  const it=q.items[q.i],style=ds(it.c.deck);
+  return `<div class="sbar"><button class="xbtn" data-act="qquit" aria-label="Quitter le quiz">${ic('x')}</button><div class="prog"><span style="width:${q.i/q.items.length*100}%"></span></div><span class="scount">${q.i+1}/${q.items.length}</span></div>
+  <section class="qcard" style="${dvars(it.c.deck)}">${ic(style.i,'wm')}
+    <div class="fhead"><span class="tag"><i></i>${it.c.lvl===0?'Mes mots':LEVELS[it.c.lvl].name}</span><span class="tag">${it.dir==='en'?'En français ?':'En anglais ?'}</span></div>
+    <div class="fbody"><div class="word${(it.dir==='en'?it.c.en:it.c.fr).length>20?' long':''}">${esc(it.dir==='en'?it.c.en:it.c.fr)}</div></div></section>
+  <div class="opts">${it.options.map((o,k)=>{let cls='opt';if(it.picked!=null){if(k===it.answer)cls+=' right';if(k===it.picked)cls+=' picked'+(k!==it.answer?' wrong':'');}
+    return `<button class="${cls}" data-act="qopt" data-v="${k}" id="opt${k}" ${it.picked!=null?'disabled':''}><span class="bub">${'ABCD'[k]}</span><span>${esc(o)}</span></button>`;}).join('')}</div>
+  ${it.picked!=null&&it.c.ex?`<div class="ex" style="${dvars(it.c.deck)}">${esc(it.c.ex)}</div>`:''}
+  ${it.picked!=null?`<button class="bigbtn" data-act="qnext">${q.i+1<q.items.length?'Question suivante':'Voir le résultat'}${ic('chev')}</button>`:''}`;
+}
+function answer(k){
+  const it=quiz.items[quiz.i];if(it.picked!=null)return;it.picked=k;const t=dayNum(),c=it.c,prev=st(c);
+  if(k===it.answer){quiz.score++;if(!prev)S.cards[c.id]=[1,t+1,0,1];}
+  else{const n=prev?prev.slice():[0,t,0,0];n[0]=0;n[1]=t;n[2]=(n[2]||0)+1;n[3]=(n[3]||0)+1;S.cards[c.id]=n;}
+  S.days[t]=(S.days[t]||0)+1;save();route.anim=false;render();route.anim=true;$('main').classList.remove('rise');
+}
+
+/* ---------- Stats ---------- */
+function vStats(){
+  const t=dayNum(),all=allCards();let acq=0,lrn=0,unseen=0;
+  all.forEach(c=>{const s=st(c);if(!s)unseen++;else if(s[0]>=ACQUIRED)acq++;else lrn++;});
+  const tomorrow=all.filter(c=>{const s=st(c);return s&&s[1]<=t+1;}).length;
+  const total=Object.values(S.days).reduce((a,b)=>a+b,0);
+  const days=[];for(let i=13;i>=0;i--)days.push({d:t-i,n:S.days[t-i]||0});const max=Math.max(5,...days.map(x=>x.n));
+  const lv=[1,2,3].map(l=>{const cs=CARDS.filter(c=>c.lvl===l);return {l,n:cs.length,a:cs.filter(c=>status(c)==='s2').length};});
+  const mA=MINE.cards.filter(c=>status(c)==='s2').length;
+  const hard=all.filter(c=>{const s=st(c);return s&&s[2]>0;}).sort((a,b)=>st(b)[2]-st(a)[2]||st(a)[0]-st(b)[0]).slice(0,8);
+  const wd=['D','L','M','M','J','V','S'];
+  const lvRing=(p,col,name,sub)=>`<div><div class="ringwrap">${ring(p,64,8,col,'var(--soft)')}<div class="ctr"><b class="mono">${Math.round(p*100)}%</b></div></div><p>${name}<small>${sub}</small></p></div>`;
+  return `<div class="sec-h" style="padding-top:8px"><h2 style="font-size:1.9rem">Progrès</h2></div>
+  <section class="card-s sum"><div class="ringwrap">${ring(acq/all.length,96,11,'var(--accent)','var(--soft)')}<div class="ctr"><div><b class="mono" style="font-size:1.3rem">${acq}</b><span class="muted">acquis</span></div></div></div>
+    <div><h2>${acq} mots sur ${all.length}</h2><p class="muted" style="margin:4px 0 0;font-size:.9rem">${lrn} en cours · ${unseen} jamais vus</p></div></section>
+  <div class="sgrid">
+    <div class="card-s stile"><span style="color:#FF7A1A">${ic('flame')}</span><b class="mono">${streak()}</b><span>jours d'affilée</span></div>
+    <div class="card-s stile"><span style="color:var(--accent)">${ic('layers')}</span><b class="mono">${total}</b><span>cartes revues au total</span></div>
+    <div class="card-s stile"><span style="color:var(--mid)">${ic('cal')}</span><b class="mono">${tomorrow}</b><span>prévues d'ici demain</span></div>
+    <div class="card-s stile"><span style="color:var(--good)">${ic('target')}</span><b class="mono">${S.days[t]||0}/${S.settings.goal}</b><span>objectif du jour</span></div>
+  </div>
+  <section class="card-s rings">${lvRing(lv[0].a/lv[0].n,'var(--l1)','Bases','470–725')}${lvRing(lv[1].a/lv[1].n,'var(--l2)','Avancé','730–855')}${lvRing(lv[2].a/lv[2].n,'var(--l3)','Expert','860–990')}${lvRing(MINE.cards.length?mA/MINE.cards.length:0,'var(--sun)','Mes mots','Notion')}</section>
+  <section class="card-s chartbox"><div class="sec-h" style="padding:0"><h2 style="font-size:1.05rem">Cartes revues</h2><span class="eyebrow">14 jours</span></div>
+    <div class="chart">${days.map((x,i)=>`<div class="${x.n?'':'z'}${i===13?' t':''}" style="height:${x.n?Math.max(5,x.n/max*100):3}%">${x.n?`<b>${x.n}</b>`:''}</div>`).join('')}</div>
+    <div class="chartx">${days.map(x=>`<span>${wd[new Date(x.d*86400000+43200000).getUTCDay()]}</span>`).join('')}</div></section>
+  <div class="sec-h"><h2 style="font-size:1.1rem">Mots qui résistent</h2></div>
+  ${hard.length?`<section class="card-s hard">${hard.map(c=>`<div><b>${esc(c.en)}</b><small>${esc(c.fr)}</small><em>${plural(st(c)[2],'erreur')}</em></div>`).join('')}</section>
+    <button class="bigbtn alt" data-act="quiz" data-v="weak">${ic('target')}Quiz sur mes mots fragiles</button>`
+  :`<div class="card-s note">Les mots où tu te trompes le plus apparaîtront ici après tes premières révisions.</div>`}`;
+}
+
+/* ---------- Settings ---------- */
+function seg(act,cur,opts){return `<div class="seg">${opts.map(([v,l])=>`<button data-act="${act}" data-v="${v}" aria-pressed="${String(v)===String(cur)}">${l}</button>`).join('')}</div>`;}
+function vSettings(){
+  const standalone=(window.navigator.standalone===true)||matchMedia('(display-mode: standalone)').matches;
+  const when=S.notionAt?new Date(S.notionAt).toLocaleDateString('fr-FR',{day:'numeric',month:'short'})+' à '+new Date(S.notionAt).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}):NOTION_DATE;
+  return `<div class="sec-h" style="padding-top:8px"><h2 style="font-size:1.9rem">Réglages</h2></div>
+  <section class="card-s group">
+    <div class="grow"><span class="gl"><span class="gi" style="background:#3B6CF6">${ic('swap')}</span>Sens des cartes</span>${seg('dir',S.settings.dir,[['en','EN→FR'],['fr','FR→EN'],['mix','Mixte']])}</div>
+    <div class="grow"><span class="gl"><span class="gi" style="background:#14A06B">${ic('sparkle')}</span>Nouveaux mots / session</span>${seg('newper',S.settings.newPer,[[10,'10'],[15,'15'],[25,'25']])}</div>
+    <div class="grow"><span class="gl"><span class="gi" style="background:#E39500">${ic('target')}</span>Objectif du jour</span>${seg('goal',S.settings.goal,[[10,'10'],[20,'20'],[40,'40']])}</div>
+  </section>
+  <section class="card-s group">
+    <div class="grow"><span class="gl"><span class="gi" style="background:#7C5CE0">${ic('layers')}</span>Niveaux révisés</span></div>
+    <div class="lvchips">${[1,2,3].map(l=>`<button class="lvc" style="--lc:var(--l${l})" data-act="lvl" data-v="${l}" aria-pressed="${S.settings.levels.includes(l)}"><i></i>${LEVELS[l].name}<small>${LEVELS[l].range}</small></button>`).join('')}</div>
+  </section>
+  <section class="card-s group">
+    <div class="grow"><span class="gl"><span class="gi" style="background:#F5B700;color:#1E1A0A">${ic('bookmark')}</span>Mes mots Notion</span><span class="muted mono" style="font-size:.78rem">${MINE.cards.length} mots</span></div>
+    ${IN_CLAUDE?`<p class="txt">${esc(notionMsg||('Dernière mise à jour : '+when))}</p><div style="padding:0 16px 14px"><button class="bigbtn alt" data-act="notion" id="notionBtn">${ic('rotate')}Mettre à jour depuis Notion</button></div>`
+      :`<p class="txt">${esc(notionMsg||('Mots copiés le '+when+'.'))} Pour récupérer tes nouveaux mots, ouvre la version de Bulle dans Claude et touche « Mettre à jour depuis Notion ».</p>`}
+  </section>
+  <section class="card-s group">
+    <div class="grow"><span class="gl"><span class="gi" style="background:#1AA3D9">${ic('home')}</span>Écran d'accueil</span>${standalone?'<span class="muted" style="font-size:.85rem">Installée</span>':''}</div>
+    ${standalone?`<p class="txt">Bulle est installée sur ton téléphone. Ta progression reste enregistrée sur cet appareil.</p>`
+      :`<ol class="steps"><li>Ouvre le lien de Bulle dans Safari.</li><li>Touche le bouton Partager.</li><li>Choisis « Sur l'écran d'accueil ».</li></ol>`}
+  </section>
+  <section class="card-s group">
+    <div class="grow"><span class="gl"><span class="gi" style="background:#E5484D">${ic('trash')}</span>Remettre à zéro</span>
+      ${resetAsk?`<span style="display:flex;gap:14px"><button class="linkbtn" data-act="reset-no">Annuler</button><button class="dangerbtn" data-act="reset-yes">Tout effacer</button></span>`:`<button class="dangerbtn" data-act="reset">Effacer ma progression</button>`}</div>
+  </section>
+  <p class="foot-note">${CARDS.length} mots TOEIC · ${DECKS.length} listes · ${MINE.cards.length} mots perso</p>`;
+}
+
+/* ---------- Notion sync ---------- */
+function clean(v){if(v==null)return '';let s=typeof v==='string'?v:(Array.isArray(v)?v.join(', '):String(v));s=s.replace(/<br\s*\/?>/gi,' ').replace(/<[^>]+>/g,' ');const ta=document.createElement('textarea');ta.innerHTML=s;s=ta.value;return s.replace(/\\([$*_~`])/g,'$1').replace(/\s+/g,' ').trim();}
+async function syncNotion(){
+  const btn=$('notionBtn');if(btn)btn.disabled=true;notionMsg='Lecture de ta base Notion';render();
+  try{
+    const mcp=await window.claude.use('mcp');if(!mcp){notionMsg='Notion n\'est pas accessible depuis cette vue.';return;}
+    const res=await mcp.callTool('Notion','notion-query-data-sources',{data:{mode:'rows',data_source_url:NOTION_DS,limit:100}});
+    let p=res&&res.payload;if(p==null&&res&&Array.isArray(res.content)){const tb=res.content.find(b=>b&&b.type==='text');if(tb)p=tb.text;}
+    if(typeof p==='string'){try{p=JSON.parse(p);}catch(e){}}
+    const rows=p&&Array.isArray(p.results)?p.results:null;if(!rows)throw {code:'shape'};
+    const list=rows.map(r=>[clean(r['Mot ou erreur']),clean(r['Traduction']),clean(r['Type']),clean(r['Exemple']),clean(r['Règle']||r['Correction ou règle'])]).filter(x=>x[0]);
+    if(!list.length){notionMsg='Ta base Notion est vide pour l\'instant.';return;}
+    S.notion=list;S.notionAt=Date.now();save();rebuildMine();notionMsg=`${plural(list.length,'mot')} à jour depuis Notion.`;
+  }catch(e){const c=e&&e.code;
+    notionMsg=c==='server_not_connected'?'Connecte Notion dans les réglages de claude.ai, rubrique Connecteurs.'
+      :c==='not_in_manifest'||c==='approval_required'?'Accès à Notion refusé pour cette page. Réessaie et accepte la demande.'
+      :c==='needs_reauth'?'Reconnecte Notion dans les réglages de claude.ai.'
+      :'Synchro impossible pour le moment. Tes mots actuels sont conservés.';
+  }finally{route.anim=false;render();route.anim=true;}
+}
+
+/* ---------- Events ---------- */
+$('main').addEventListener('click',e=>{
+  const b=e.target.closest('[data-act]');if(!b||b.disabled)return;const a=b.dataset.act,v=b.dataset.v;
+  switch(a){
+    case 'home':go('home');break;
+    case 'deck':go('deck',{k:v});break;
+    case 'study':startSession(v);break;
+    case 'flip':flip();break;
+    case 'grade':grade(+v);break;
+    case 'close':{const k=session&&session.k;go(k&&k!=='all'&&DECK_MAP[k]?'deck':'home',{k});break;}
+    case 'quiz':quizDeck=(v&&v!=='weak')?v:quizDeck;startQuiz(v);break;
+    case 'qdeck':quizDeck=v;quizMsg='';route.anim=false;render();route.anim=true;break;
+    case 'qstart':startQuiz(quizDeck);break;
+    case 'qopt':answer(+v);break;
+    case 'qnext':quiz.i++;render();window.scrollTo(0,0);break;
+    case 'qquit':quiz=null;go('quiz');break;
+    case 'dir':S.settings.dir=v;save();route.anim=false;render();route.anim=true;break;
+    case 'newper':S.settings.newPer=+v;save();route.anim=false;render();route.anim=true;break;
+    case 'goal':S.settings.goal=+v;save();route.anim=false;render();route.anim=true;break;
+    case 'lvl':{const l=+v,L=S.settings.levels;if(L.includes(l)){if(L.length===1)return;S.settings.levels=L.filter(x=>x!==l);}else S.settings.levels=L.concat(l).sort();save();route.anim=false;render();route.anim=true;break;}
+    case 'notion':syncNotion();break;
+    case 'reset':resetAsk=true;route.anim=false;render();route.anim=true;break;
+    case 'reset-no':resetAsk=false;route.anim=false;render();route.anim=true;break;
+    case 'reset-yes':{const keep={settings:S.settings,notion:S.notion,notionAt:S.notionAt};S=normalize(Object.assign(defaultState(),keep));resetAsk=false;save();go('home');break;}
+  }
+});
+document.addEventListener('keydown',e=>{
+  if(route.v!=='study'||!session||session.idx>=session.queue.length)return;
+  if(!session.flipped&&(e.key===' '||e.key==='Enter')){e.preventDefault();flip();}
+  else if(session.flipped&&['1','2','3'].includes(e.key))grade(+e.key-1);
+  else if(session.flipped&&e.key==='ArrowRight')grade(2);else if(session.flipped&&e.key==='ArrowLeft')grade(0);
+});
+
+render();
+initRemote();
+</script>
+
+<script>if('serviceWorker' in navigator){addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));}</script>
+</body>
+</html>
